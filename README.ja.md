@@ -47,66 +47,43 @@ _近日公開 — 推論パイプラインの全体ウォークスルー（3分�
 ## 🏗️ アーキテクチャ
 
 ```mermaid
-graph TB
-    subgraph Frontend["React 19 + TypeScript + Vite"]
-        UI[InputForm + AI 設定]
-        Cards[プラットフォームコンテンツカード]
-        HITL["HITL コントロール<br/>承認 / 編集 / 改善"]
-        Reasoning["推論パネル<br/>フェーズバッジ"]
-        Tools["ツールピル<br/>リアルタイムバッジ"]
-        Export["エクスポート .md / .json"]
-        History["履歴サイドバー"]
-        AB["A/B 比較カード"]
+%%{init: {'flowchart': {'nodeSpacing': 25, 'rankSpacing': 60, 'curve': 'basis'}}}%%
+graph LR
+    subgraph Frontend["🖥️ フロントエンド<br/>React 19 + TypeScript + Vite"]
+        UI["入力フォーム<br/>+ AI 設定"]
+        Display["コンテンツカード / A-B 比較<br/>推論パネル / ツールピル"]
+        HITL["HITL コントロール<br/>承認 · 編集 · 改善 · エクスポート"]
     end
 
-    subgraph Backend["FastAPI + SSE ストリーミング"]
-        API["POST /api/chat"]
-        EvalAPI["POST /api/evaluate"]
-        HistAPI["GET /api/conversations"]
-        Agent["gpt-5.2 推論エージェント"]
-        Telemetry["OpenTelemetry<br/>分散トレーシング"]
+    subgraph Backend["⚙️ バックエンド — FastAPI"]
+        API["SSE ストリーミング API<br/>/api/chat · /evaluate · /conversations"]
+        Agent["gpt-5.2<br/>推論エージェント"]
     end
 
-    subgraph AgentTools["7 エージェントツール"]
-        WS["🌐 Web Search<br/>Bing Grounding"]
-        FS["📁 File Search<br/>ブランドガイドライン"]
-        MCP["📘 MCP Server<br/>Microsoft Learn"]
-        IQ["🔍 Foundry IQ<br/>Agentic Retrieval"]
-        GC["✏️ generate_content"]
-        RC["📋 review_content"]
-        GI["🖼️ generate_image"]
+    subgraph Tools["🔧 7 エージェントツール"]
+        direction TB
+        Hosted["🌐 Web Search — Bing<br/>📁 File Search — Vector Store<br/>📘 MCP — Microsoft Learn<br/>🔍 Foundry IQ — AI Search"]
+        Custom["✏️ generate_content<br/>📋 review_content<br/>🖼️ generate_image"]
     end
 
-    subgraph Azure["Microsoft Foundry + Azure"]
-        GPT52["gpt-5.2"]
-        GPTImg["gpt-image-1.5"]
-        VS["Vector Store"]
-        Bing["Bing Grounding"]
-        AIS["Azure AI Search"]
-        Cosmos["Cosmos DB"]
-        AppInsights["Application Insights"]
-        Eval["Foundry Evaluation"]
+    subgraph Azure["☁️ Microsoft Foundry + Azure"]
+        direction TB
+        Models["gpt-5.2 · gpt-image-1.5"]
+        Data["Vector Store · Bing Grounding<br/>Azure AI Search · Cosmos DB"]
+        Ops["Application Insights<br/>Foundry Evaluation"]
     end
 
-    UI -->|ChatRequest + SSE| API
-    History -->|一覧/読込| HistAPI
-    API -->|stream=True| Agent
-    API -->|保存| Cosmos
-    HistAPI -->|クエリ| Cosmos
-    Agent --> WS & FS & MCP & IQ & GC & RC & GI
-    WS --> Bing
-    FS --> VS
-    IQ --> AIS
-    Agent --> GPT52
-    GI --> GPTImg
-    Agent -->|構造化 JSON| API
-    API -->|SSE イベント| Cards & Reasoning & Tools
-    Cards --> HITL
-    HITL -->|改善フィードバック| API
-    Cards --> Export
-    Telemetry -->|トレース| AppInsights
-    EvalAPI --> Eval
-    AB --> Cards
+    UI -- "ChatRequest + SSE" --> API
+    API -- "stream=True" --> Agent
+    Agent --> Tools
+    Hosted & Custom --> Azure
+    Agent -- "構造化 JSON" --> API
+    API -- "SSE イベント" --> Display
+    Display --> HITL
+    HITL -- "改善フィードバック" --> API
+    API -- "保存 / クエリ" --> Data
+    Agent --> Models
+    API -. "トレース" .-> Ops
 ```
 
 ## 🧠 推論パイプライン（3 フェーズ）

@@ -47,66 +47,43 @@ _Coming soon — 3 min walkthrough of the full reasoning pipeline_
 ## 🏗️ Architecture
 
 ```mermaid
-graph TB
-    subgraph Frontend["React 19 + TypeScript + Vite"]
-        UI[InputForm + AI Settings]
-        Cards[Platform Content Cards]
-        HITL["HITL Controls<br/>Approve / Edit / Refine"]
-        Reasoning["ReasoningPanel<br/>Phase Badges"]
-        Tools["Tool Pills<br/>Real-time Badges"]
-        Export["Export .md / .json"]
-        History["HistorySidebar"]
-        AB["A/B Compare Cards"]
+%%{init: {'flowchart': {'nodeSpacing': 25, 'rankSpacing': 60, 'curve': 'basis'}}}%%
+graph LR
+    subgraph Frontend["🖥️ Frontend<br/>React 19 + TypeScript + Vite"]
+        UI["InputForm<br/>+ AI Settings"]
+        Display["Content Cards / A-B Compare<br/>Reasoning Panel / Tool Pills"]
+        HITL["HITL Controls<br/>Approve · Edit · Refine · Export"]
     end
 
-    subgraph Backend["FastAPI + SSE Streaming"]
-        API["POST /api/chat"]
-        EvalAPI["POST /api/evaluate"]
-        HistAPI["GET /api/conversations"]
-        Agent["gpt-5.2 Reasoning Agent"]
-        Telemetry["OpenTelemetry<br/>Distributed Tracing"]
+    subgraph Backend["⚙️ Backend — FastAPI"]
+        API["SSE Streaming API<br/>/api/chat · /evaluate · /conversations"]
+        Agent["gpt-5.2<br/>Reasoning Agent"]
     end
 
-    subgraph AgentTools["7 Agent Tools"]
-        WS["🌐 Web Search<br/>Bing Grounding"]
-        FS["📁 File Search<br/>Brand Guidelines"]
-        MCP["📘 MCP Server<br/>Microsoft Learn"]
-        IQ["🔍 Foundry IQ<br/>Agentic Retrieval"]
-        GC["✏️ generate_content"]
-        RC["📋 review_content"]
-        GI["🖼️ generate_image"]
+    subgraph Tools["🔧 7 Agent Tools"]
+        direction TB
+        Hosted["🌐 Web Search — Bing<br/>📁 File Search — Vector Store<br/>📘 MCP — Microsoft Learn<br/>🔍 Foundry IQ — AI Search"]
+        Custom["✏️ generate_content<br/>📋 review_content<br/>🖼️ generate_image"]
     end
 
-    subgraph Azure["Microsoft Foundry + Azure"]
-        GPT52["gpt-5.2"]
-        GPTImg["gpt-image-1.5"]
-        VS["Vector Store"]
-        Bing["Bing Grounding"]
-        AIS["Azure AI Search"]
-        Cosmos["Cosmos DB"]
-        AppInsights["Application Insights"]
-        Eval["Foundry Evaluation"]
+    subgraph Azure["☁️ Microsoft Foundry + Azure"]
+        direction TB
+        Models["gpt-5.2 · gpt-image-1.5"]
+        Data["Vector Store · Bing Grounding<br/>Azure AI Search · Cosmos DB"]
+        Ops["Application Insights<br/>Foundry Evaluation"]
     end
 
-    UI -->|ChatRequest + SSE| API
-    History -->|List/Load| HistAPI
-    API -->|stream=True| Agent
-    API -->|save| Cosmos
-    HistAPI -->|query| Cosmos
-    Agent --> WS & FS & MCP & IQ & GC & RC & GI
-    WS --> Bing
-    FS --> VS
-    IQ --> AIS
-    Agent --> GPT52
-    GI --> GPTImg
-    Agent -->|Structured JSON| API
-    API -->|SSE Events| Cards & Reasoning & Tools
-    Cards --> HITL
-    HITL -->|Refine feedback| API
-    Cards --> Export
-    Telemetry -->|Traces| AppInsights
-    EvalAPI --> Eval
-    AB --> Cards
+    UI -- "ChatRequest + SSE" --> API
+    API -- "stream=True" --> Agent
+    Agent --> Tools
+    Hosted & Custom --> Azure
+    Agent -- "Structured JSON" --> API
+    API -- "SSE Events" --> Display
+    Display --> HITL
+    HITL -- "Refine feedback" --> API
+    API -- "Save / Query" --> Data
+    Agent --> Models
+    API -. "Traces" .-> Ops
 ```
 
 ## 🧠 Reasoning Pipeline (3-Phase)
