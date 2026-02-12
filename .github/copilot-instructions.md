@@ -43,7 +43,7 @@ Future roadmap includes multi-agent pipeline (Ideation → Creator → Reviewer)
 │   ├── src/
 │   │   ├── components/   # InputForm, ContentCard, ReasoningPanel, ToolEvents, SuggestedQuestions
 │   │   ├── hooks/        # useTheme, useI18n
-│   │   └── lib/          # api.ts (SSE client), i18n.ts
+│   │   └── lib/          # api.ts (SSE client), i18n.ts (EN/JA/KO/ZH/ES)
 │   ├── package.json
 │   └── vite.config.ts
 ├── data/                 # Grounding data
@@ -128,9 +128,11 @@ The single agent autonomously progresses through all phases.
 - 💡 Suggested questions (empty-state grid with clickable samples)
 - 🖼️ Platform-specific content cards (LinkedIn / X / Instagram) with images
 - 📋 Per-platform copy to clipboard
-- 🌐 i18n (EN/JA) for UI labels and content generation
+- 🌐 i18n (EN/JA/KO/ZH/ES) for UI labels and content generation
 - 🌙 Dark/Light mode (Tailwind dark: classes)
 - 📝 Markdown rendering (react-markdown)
+- ✨ Glassmorphism UI (frosted glass cards, backdrop blur, gradient backgrounds)
+- 🎨 Gradient design system (submit button, header, animated borders)
 
 ## Coding Standards
 

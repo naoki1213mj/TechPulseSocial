@@ -4,8 +4,8 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│         Frontend (React + TypeScript + Tailwind + shadcn/ui) │
-│  🌐 i18n (EN/JA)  🌙 Dark/Light Mode  💬 Multi-turn Chat   │
+│         Frontend (React + TypeScript + Tailwind + Glassmorphism)   │
+│  🌐 i18n (EN/JA/KO/ZH/ES)  🌙 Dark/Light Mode  💬 Multi-turn Chat   │
 │  🧠 Reasoning Display  🔧 Tool Viz  📋 Copy  📝 Markdown   │
 └───────────────────────────┬──────────────────────────────────┘
                             │ REST API + SSE (Server-Sent Events)
@@ -252,7 +252,7 @@ for each platform's content and quality scores.
 
 # Language
 Generate content in the language specified by the user.
-Default: English. Support: English, Japanese.
+Default: English. Support: English, Japanese, Korean, Chinese, Spanish.
 ```
 
 ### 推論トークンの取得
@@ -340,7 +340,7 @@ hackfest-techconnect2026/
 │   │   │   └── useI18n.ts         # i18n フック
 │   │   ├── lib/
 │   │   │   ├── api.ts             # API クライアント
-│   │   │   └── i18n.ts            # 翻訳データ (EN/JA)
+│   │       └── i18n.ts            # 翻訳データ (EN/JA/KO/ZH/ES)
 │   │   └── index.css              # Tailwind CSS + dark mode
 │   ├── package.json
 │   └── vite.config.ts
@@ -372,7 +372,7 @@ hackfest-techconnect2026/
 |------|------|--------|
 | 🧠 **推論プロセス表示** | gpt-5.2 の thinking トークンを折りたたみ UI で表示 | fabric-foundry-agentic-starter |
 | 🔧 **ツール使用状況可視化** | `__TOOL_EVENT__` マーカーでツール名・入力・結果・所要時間をリアルタイム表示 | fabric-foundry-agentic-starter |
-| 🌐 **多言語対応 (i18n)** | EN/JA 切替。UI ラベル + コンテンツ生成言語 | fabric-foundry-agentic-starter |
+| 🌐 **多言語対応 (i18n)** | EN/JA/KO/ZH/ES 切替。UI ラベル + コンテンツ生成言語。国旗付きドロップダウンセレクター | fabric-foundry-agentic-starter |
 | 🌙 **ダーク/ライトモード** | Tailwind `dark:` クラスで全コンポーネント対応、チャート含む | fabric-foundry-agentic-starter |
 | 💬 **マルチターン会話** | Thread ID 保持でリファイン対話対応。チャット履歴表示 | fabric-foundry-agentic-starter |
 | 📋 **コピー機能** | プラットフォーム別のプレーンテキストをクリップボードにコピー | 新規 |

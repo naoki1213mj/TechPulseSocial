@@ -40,7 +40,7 @@
 | `content_type` | ✅ | コンテンツタイプ |
 | `tone` | ❌ | トーン指定（デフォルト: ブランドガイドライン準拠） |
 | `additional_context` | ❌ | 追加コンテキスト・参考URL等 |
-| `language` | ❌ | 出力言語（デフォルト: 英語、日本語対応） |
+| `language` | ❌ | 出力言語（デフォルト: 英語、対応: EN/JA/KO/ZH/ES） |
 
 ### 2.4 出力
 
@@ -84,7 +84,7 @@
 |------|------|
 | 🧠 **推論プロセス表示** | gpt-5.2 の thinking トークンを折りたたみでリアルタイム表示 |
 | 🔧 **ツール使用状況可視化** | ツール名・入力・所要時間をタイムライン表示 |
-| 🌐 **多言語対応 (i18n)** | UIラベル + コンテンツ生成言語の EN/JA 切替 |
+| 🌐 **多言語対応 (i18n)** | UIラベル + コンテンツ生成言語の 5言語切替 (EN/JA/KO/ZH/ES)、国旗付きドロップダウンセレクター |
 | 🌙 **ダーク/ライトモード** | Tailwind dark: クラスで全コンポーネント対応 |
 | 💬 **マルチターン会話** | 「もっとカジュアルに」等のリファイン指示に対応 |
 | 📋 **コピー機能** | プラットフォーム別のプレーンテキストをクリップボードにコピー |
@@ -98,7 +98,7 @@
 | **AI基盤** | Microsoft Foundry (agent-framework-core + Responses API) |
 | **モデル** | gpt-5.2 |
 | **バックエンド** | Python + FastAPI（REST API + SSE ストリーミング） |
-| **フロントエンド** | React + TypeScript + Tailwind CSS + shadcn/ui |
+| **フロントエンド** | React + TypeScript + Tailwind CSS（グラスモーフィズム + グラディエントデザイン） |
 | **グラウンディング** | File Search（ブランドガイドライン）+ WebSearchPreview |
 | **パッケージ管理** | uv (Python) / npm (React) |
 | **認証** | DefaultAzureCredential |

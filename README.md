@@ -2,7 +2,7 @@
 
 > **Agents League @ TechConnect 2026** — Reasoning Agents Track
 
-An AI-powered content creation pipeline for **TechPulse Inc.** that assists the communication team in creating platform-optimized social media content for LinkedIn, X (Twitter), and Instagram — featuring **gpt-5.2 reasoning**, **File Search grounding**, **Foundry IQ Agentic Retrieval**, **GPT Image generation**, **Human-in-the-Loop review**, **Cosmos DB conversation history**, **Azure Container Apps deployment**, and **real-time SSE streaming** with reasoning phase visualization.
+An AI-powered content creation pipeline for **TechPulse Inc.** that assists the communication team in creating platform-optimized social media content for LinkedIn, X (Twitter), and Instagram — featuring **gpt-5.2 reasoning**, **File Search grounding**, **Foundry IQ Agentic Retrieval**, **GPT Image generation**, **Human-in-the-Loop review**, **Cosmos DB conversation history**, **Azure Container Apps deployment**, **5-language i18n** (EN/JA/KO/ZH/ES), **glassmorphism UI**, and **real-time SSE streaming** with reasoning phase visualization.
 
 ## Architecture
 
@@ -202,7 +202,7 @@ This builds a multi-stage Docker image (Node.js frontend → Python backend) and
 │   │   │   ├── HistorySidebar.tsx   # Conversation history sidebar
 │   │   │   └── Header.tsx           # App header with theme/locale toggles
 │   │   ├── hooks/            # useTheme, useI18n
-│   │   └── lib/              # api.ts (SSE client), i18n.ts (EN/JA)
+│   │   └── lib/              # api.ts (SSE client), i18n.ts (EN/JA/KO/ZH/ES)
 │   ├── vite.config.ts
 │   └── package.json
 ├── infra/
@@ -250,9 +250,12 @@ This builds a multi-stage Docker image (Node.js frontend → Python backend) and
 - **Stop / Retry** — Abort generation or retry with one click
 - **Elapsed Timer** — Real-time generation duration display
 - **Keyboard Shortcuts** — Ctrl+Enter to submit, Escape to stop
-- **Suggested Questions** — Empty-state grid with 4 clickable examples
-- **Internationalization** — Full EN/JA support for UI and content generation
+- **Suggested Questions** — Empty-state grid with 4 clickable examples (float-in animation)
+- **Internationalization** — Full 5-language support (EN/JA/KO/ZH/ES) with flag-based dropdown selector
 - **Dark/Light Mode** — System-preference-aware theme switching
+- **Glassmorphism UI** — Frosted glass cards, gradient backgrounds, backdrop blur effects
+- **Gradient Design** — Gradient submit button, animated gradient borders on hover, brand gradient header
+- **Micro-animations** — Float-in suggestions, dropdown transitions, platform chip glow effects
 
 ## API
 
@@ -289,7 +292,7 @@ Returns `{"status": "ok", "service": "techpulse-social", "version": "0.3.0"}`.
 | **Accuracy & Relevance** | 25% | 6 tools (web search, file search, Foundry IQ, content gen, review, image gen), brand grounding via Vector Store + Agentic Retrieval, platform-specific rules |
 | **Reasoning & Multi-step Thinking** | 25% | 3-phase pipeline (CoT → ReAct → Self-Reflection), live phase badges, controllable depth, collapsible reasoning panel |
 | **Creativity & Originality** | 20% | HITL workflow (approve/edit/refine), reasoning phase visualization, content export, GPT Image generation, conversation history |
-| **User Experience & Presentation** | 15% | Polished UI with animations, skeleton loading, dark/light mode, i18n, keyboard shortcuts, suggested questions, history sidebar |
+| **User Experience & Presentation** | 15% | Polished glassmorphism UI with animations, gradient design, skeleton loading, dark/light mode, 5-language i18n (EN/JA/KO/ZH/ES), keyboard shortcuts, suggested questions, history sidebar |
 | **Technical Implementation** | 15% | agent-framework-core SDK, SSE streaming, singleton client, Cosmos DB, Foundry IQ Agentic Retrieval, azd Container Apps deployment, multi-stage Docker build |
 
 ## License

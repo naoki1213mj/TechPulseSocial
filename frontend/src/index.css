@@ -14,6 +14,102 @@
 }
 
 /* ============================================
+   Glassmorphism & Gradient Utilities
+   ============================================ */
+.header-glass {
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(248,250,252,0.9) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.dark .header-glass {
+  background: linear-gradient(135deg, rgba(17,24,39,0.9) 0%, rgba(15,23,42,0.92) 100%);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.dark .glass-card {
+  background: rgba(17, 24, 39, 0.6);
+  border-color: rgba(75, 85, 99, 0.3);
+}
+
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.gradient-border:hover::before {
+  opacity: 1;
+}
+
+/* Dropdown animation */
+@keyframes dropdown {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-dropdown {
+  animation: dropdown 0.15s ease-out;
+}
+
+/* Float-in animation for suggestion cards */
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.float-in {
+  animation: floatIn 0.4s ease-out both;
+}
+.float-in:nth-child(1) { animation-delay: 0ms; }
+.float-in:nth-child(2) { animation-delay: 80ms; }
+.float-in:nth-child(3) { animation-delay: 160ms; }
+.float-in:nth-child(4) { animation-delay: 240ms; }
+
+/* Gradient submit button */
+.btn-gradient {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+  background-size: 200% 200%;
+  transition: all 0.3s ease;
+}
+.btn-gradient:hover:not(:disabled) {
+  background-position: 100% 100%;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
+}
+.btn-gradient:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Platform chip active state */
+.platform-chip-active {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Subtle glow for active elements */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+.dark .glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+/* ============================================
    Reasoning Indicator (matching reference repo)
    ============================================ */
 .reasoning-indicator {

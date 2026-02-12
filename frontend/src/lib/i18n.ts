@@ -1,5 +1,16 @@
 /** i18n translation data */
-export type Locale = "en" | "ja";
+export type Locale = "en" | "ja" | "ko" | "zh" | "es";
+
+/** Locale metadata for UI display */
+export const LOCALE_META: Record<Locale, { flag: string; label: string; nativeLabel: string }> = {
+  en: { flag: "🇺🇸", label: "English", nativeLabel: "English" },
+  ja: { flag: "🇯🇵", label: "Japanese", nativeLabel: "日本語" },
+  ko: { flag: "🇰🇷", label: "Korean", nativeLabel: "한국어" },
+  zh: { flag: "🇨🇳", label: "Chinese", nativeLabel: "中文" },
+  es: { flag: "🇪🇸", label: "Spanish", nativeLabel: "Español" },
+};
+
+export const ALL_LOCALES: Locale[] = ["en", "ja", "ko", "zh", "es"];
 
 const translations: Record<Locale, Record<string, string>> = {
   en: {
@@ -52,6 +63,9 @@ const translations: Record<Locale, Record<string, string>> = {
     // Language
     "language.en": "English",
     "language.ja": "Japanese",
+    "language.ko": "Korean",
+    "language.zh": "Chinese",
+    "language.es": "Spanish",
 
     // Settings
     "settings.title": "AI Settings",
@@ -161,6 +175,9 @@ const translations: Record<Locale, Record<string, string>> = {
     // Language
     "language.en": "English",
     "language.ja": "日本語",
+    "language.ko": "한국어",
+    "language.zh": "中文",
+    "language.es": "Español",
 
     // Settings
     "settings.title": "AI 設定",
@@ -220,8 +237,344 @@ const translations: Record<Locale, Record<string, string>> = {
     "footer.details": "処理の詳細",
     "footer.reasoning": "推論",
   },
+  ko: {
+    "app.title": "TechPulse Social",
+    "app.subtitle": "AI 기반 소셜 미디어 콘텐츠 스튜디오",
+    "app.description": "추론 AI로 고품질 소셜 미디어 콘텐츠 생성",
+
+    // Input
+    "input.topic": "주제 / 테마",
+    "input.topic.placeholder": "예: 새로운 AI 코드 어시스턴트 기능 출시...",
+    "input.platforms": "플랫폼",
+    "input.contentType": "콘텐츠 유형",
+    "input.language": "출력 언어",
+    "input.submit": "콘텐츠 생성",
+    "input.generating": "생성 중...",
+    "input.stop": "생성 중지",
+
+    // Status
+    "status.complete": "완료",
+    "action.newConversation": "새 대화",
+
+    // HITL
+    "hitl.approve": "승인",
+    "hitl.approved": "승인됨",
+    "hitl.edit": "편집",
+    "hitl.refine": "개선",
+    "hitl.refine.placeholder": "개선 사항을 설명해 주세요...",
+    "hitl.send": "피드백 전송",
+    "hitl.cancel": "취소",
+    "hitl.save": "저장",
+
+    // Export
+    "export.markdown": "Markdown 내보내기",
+    "export.json": "JSON 내보내기",
+
+    // Error
+    "error.generic": "오류가 발생했습니다. 다시 시도해 주세요.",
+    "error.retry": "재시도",
+    "platforms.linkedin": "LinkedIn",
+    "platforms.x": "X (Twitter)",
+    "platforms.instagram": "Instagram",
+
+    // Content Types
+    "contentType.product_launch": "제품 출시",
+    "contentType.thought_leadership": "사고 리더십",
+    "contentType.event_promotion": "이벤트 프로모션",
+    "contentType.company_culture": "기업 문화",
+    "contentType.tech_insight": "기술 인사이트",
+
+    // Language
+    "language.en": "English",
+    "language.ja": "日本語",
+    "language.ko": "한국어",
+    "language.zh": "中文",
+    "language.es": "Español",
+
+    // Settings
+    "settings.title": "AI 설정",
+    "settings.reasoningEffort": "추론 깊이",
+    "settings.reasoningEffort.low": "Low — 빠름, 간단",
+    "settings.reasoningEffort.medium": "Medium — 균형",
+    "settings.reasoningEffort.high": "High — 깊은 추론",
+    "settings.reasoningSummary": "사고 과정 표시",
+    "settings.reasoningSummary.off": "Off — 숨기기",
+    "settings.reasoningSummary.auto": "Auto — 자동",
+    "settings.reasoningSummary.concise": "Concise — 간결",
+    "settings.reasoningSummary.detailed": "Detailed — 상세",
+
+    // Reasoning
+    "reasoning.title": "추론 과정",
+    "reasoning.thinking": "사고 중...",
+    "reasoning.complete": "추론 완료",
+
+    // Tools
+    "tools.title": "도구 사용 현황",
+    "tools.running": "개 도구 실행 중",
+    "tools.used": "개 도구 사용됨",
+    "tools.started": "실행 중",
+    "tools.completed": "완료",
+    "tools.category.search": "검색",
+    "tools.category.content": "콘텐츠",
+    "tools.category.review": "리뷰",
+    "tools.category.image": "이미지",
+
+    // Content
+    "content.copy": "복사",
+    "content.copied": "복사됨!",
+    "content.chars": "자",
+    "content.title": "생성된 콘텐츠",
+    "content.sources": "출처",
+    "review.title": "품질 리뷰",
+    "review.brandAlignment": "브랜드 적합성",
+    "review.audienceRelevance": "타겟 적합성",
+    "review.engagementPotential": "참여 잠재력",
+    "review.clarity": "명확성",
+    "review.platformOptimization": "플랫폼 최적화",
+    "review.feedback": "피드백",
+
+    // Theme / i18n
+    "theme.light": "라이트",
+    "theme.dark": "다크",
+
+    // Suggestions
+    "suggestions.title": "이런 주제를 시도해 보세요",
+    "suggestions.1": "AI 코드 어시스턴트 신기능 출시 발표",
+    "suggestions.2": "기술 컨퍼런스 참가 보고서",
+    "suggestions.3": "엔지니어링 팀 문화 소개",
+    "suggestions.4": "AI 최신 트렌드와 업계 인사이트",
+
+    // Footer area
+    "footer.processing": "처리 중",
+    "footer.details": "처리 상세",
+    "footer.reasoning": "추론",
+  },
+  zh: {
+    "app.title": "TechPulse Social",
+    "app.subtitle": "AI驱动的社交媒体内容工作室",
+    "app.description": "使用推理AI生成高质量社交媒体内容",
+
+    // Input
+    "input.topic": "主题 / 话题",
+    "input.topic.placeholder": "例如：新AI代码助手功能发布...",
+    "input.platforms": "平台",
+    "input.contentType": "内容类型",
+    "input.language": "输出语言",
+    "input.submit": "生成内容",
+    "input.generating": "生成中...",
+    "input.stop": "停止生成",
+
+    // Status
+    "status.complete": "完成",
+    "action.newConversation": "新建对话",
+
+    // HITL
+    "hitl.approve": "批准",
+    "hitl.approved": "已批准",
+    "hitl.edit": "编辑",
+    "hitl.refine": "优化",
+    "hitl.refine.placeholder": "描述如何改进此内容...",
+    "hitl.send": "发送反馈",
+    "hitl.cancel": "取消",
+    "hitl.save": "保存",
+
+    // Export
+    "export.markdown": "导出 Markdown",
+    "export.json": "导出 JSON",
+
+    // Error
+    "error.generic": "发生错误，请重试。",
+    "error.retry": "重试",
+    "platforms.linkedin": "LinkedIn",
+    "platforms.x": "X (Twitter)",
+    "platforms.instagram": "Instagram",
+
+    // Content Types
+    "contentType.product_launch": "产品发布",
+    "contentType.thought_leadership": "思想领导力",
+    "contentType.event_promotion": "活动推广",
+    "contentType.company_culture": "企业文化",
+    "contentType.tech_insight": "技术洞察",
+
+    // Language
+    "language.en": "English",
+    "language.ja": "日本語",
+    "language.ko": "한국어",
+    "language.zh": "中文",
+    "language.es": "Español",
+
+    // Settings
+    "settings.title": "AI 设置",
+    "settings.reasoningEffort": "推理深度",
+    "settings.reasoningEffort.low": "Low — 快速简单",
+    "settings.reasoningEffort.medium": "Medium — 平衡",
+    "settings.reasoningEffort.high": "High — 深度推理",
+    "settings.reasoningSummary": "思考过程显示",
+    "settings.reasoningSummary.off": "Off — 隐藏",
+    "settings.reasoningSummary.auto": "Auto — 自动",
+    "settings.reasoningSummary.concise": "Concise — 简洁",
+    "settings.reasoningSummary.detailed": "Detailed — 详细",
+
+    // Reasoning
+    "reasoning.title": "推理过程",
+    "reasoning.thinking": "思考中...",
+    "reasoning.complete": "推理完成",
+
+    // Tools
+    "tools.title": "工具使用情况",
+    "tools.running": "个工具运行中",
+    "tools.used": "个工具已使用",
+    "tools.started": "运行中",
+    "tools.completed": "完成",
+    "tools.category.search": "搜索",
+    "tools.category.content": "内容",
+    "tools.category.review": "审核",
+    "tools.category.image": "图像",
+
+    // Content
+    "content.copy": "复制",
+    "content.copied": "已复制！",
+    "content.chars": "字符",
+    "content.title": "生成的内容",
+    "content.sources": "来源",
+    "review.title": "质量审核",
+    "review.brandAlignment": "品牌契合度",
+    "review.audienceRelevance": "目标受众相关性",
+    "review.engagementPotential": "互动潜力",
+    "review.clarity": "清晰度",
+    "review.platformOptimization": "平台优化",
+    "review.feedback": "反馈",
+
+    // Theme / i18n
+    "theme.light": "浅色",
+    "theme.dark": "深色",
+
+    // Suggestions
+    "suggestions.title": "试试这些示例",
+    "suggestions.1": "AI代码助手新功能发布公告",
+    "suggestions.2": "技术大会参加报告",
+    "suggestions.3": "工程团队文化亮点",
+    "suggestions.4": "AI最新趋势与行业洞察",
+
+    // Footer area
+    "footer.processing": "处理中",
+    "footer.details": "处理详情",
+    "footer.reasoning": "推理",
+  },
+  es: {
+    "app.title": "TechPulse Social",
+    "app.subtitle": "Estudio de Contenido para Redes Sociales con IA",
+    "app.description": "Genera contenido de alta calidad para redes sociales con IA de razonamiento",
+
+    // Input
+    "input.topic": "Tema",
+    "input.topic.placeholder": "Ej: Lanzamiento de la nueva función de asistente de código IA...",
+    "input.platforms": "Plataformas",
+    "input.contentType": "Tipo de Contenido",
+    "input.language": "Idioma de Salida",
+    "input.submit": "Generar Contenido",
+    "input.generating": "Generando...",
+    "input.stop": "Detener Generación",
+
+    // Status
+    "status.complete": "Completado",
+    "action.newConversation": "Nueva Conversación",
+
+    // HITL
+    "hitl.approve": "Aprobar",
+    "hitl.approved": "Aprobado",
+    "hitl.edit": "Editar",
+    "hitl.refine": "Mejorar",
+    "hitl.refine.placeholder": "Describe cómo mejorar este contenido...",
+    "hitl.send": "Enviar Feedback",
+    "hitl.cancel": "Cancelar",
+    "hitl.save": "Guardar",
+
+    // Export
+    "export.markdown": "Exportar .md",
+    "export.json": "Exportar JSON",
+
+    // Error
+    "error.generic": "Ocurrió un error. Inténtalo de nuevo.",
+    "error.retry": "Reintentar",
+    "platforms.linkedin": "LinkedIn",
+    "platforms.x": "X (Twitter)",
+    "platforms.instagram": "Instagram",
+
+    // Content Types
+    "contentType.product_launch": "Lanzamiento de Producto",
+    "contentType.thought_leadership": "Liderazgo de Opinión",
+    "contentType.event_promotion": "Promoción de Evento",
+    "contentType.company_culture": "Cultura Empresarial",
+    "contentType.tech_insight": "Perspectiva Tecnológica",
+
+    // Language
+    "language.en": "English",
+    "language.ja": "日本語",
+    "language.ko": "한국어",
+    "language.zh": "中文",
+    "language.es": "Español",
+
+    // Settings
+    "settings.title": "Configuración de IA",
+    "settings.reasoningEffort": "Profundidad de Razonamiento",
+    "settings.reasoningEffort.low": "Low — Rápido, simple",
+    "settings.reasoningEffort.medium": "Medium — Equilibrado",
+    "settings.reasoningEffort.high": "High — Razonamiento profundo",
+    "settings.reasoningSummary": "Mostrar Pensamiento",
+    "settings.reasoningSummary.off": "Off — Ocultar",
+    "settings.reasoningSummary.auto": "Auto",
+    "settings.reasoningSummary.concise": "Concise — Conciso",
+    "settings.reasoningSummary.detailed": "Detailed — Detallado",
+
+    // Reasoning
+    "reasoning.title": "Proceso de Razonamiento",
+    "reasoning.thinking": "Pensando...",
+    "reasoning.complete": "Razonamiento completo",
+
+    // Tools
+    "tools.title": "Uso de Herramientas",
+    "tools.running": "herramientas en ejecución",
+    "tools.used": "herramientas utilizadas",
+    "tools.started": "Ejecutando",
+    "tools.completed": "Completado",
+    "tools.category.search": "Búsqueda",
+    "tools.category.content": "Contenido",
+    "tools.category.review": "Revisión",
+    "tools.category.image": "Imagen",
+
+    // Content
+    "content.copy": "Copiar",
+    "content.copied": "¡Copiado!",
+    "content.chars": "caracteres",
+    "content.title": "Contenido Generado",
+    "content.sources": "Fuentes",
+    "review.title": "Revisión de Calidad",
+    "review.brandAlignment": "Alineación de Marca",
+    "review.audienceRelevance": "Relevancia de Audiencia",
+    "review.engagementPotential": "Potencial de Engagement",
+    "review.clarity": "Claridad",
+    "review.platformOptimization": "Optimización de Plataforma",
+    "review.feedback": "Feedback",
+
+    // Theme / i18n
+    "theme.light": "Claro",
+    "theme.dark": "Oscuro",
+
+    // Suggestions
+    "suggestions.title": "Prueba estos ejemplos",
+    "suggestions.1": "Anuncio de lanzamiento del asistente de código IA",
+    "suggestions.2": "Informe de participación en conferencia tech",
+    "suggestions.3": "Cultura del equipo de ingeniería",
+    "suggestions.4": "Últimas tendencias de IA e insights de la industria",
+
+    // Footer area
+    "footer.processing": "Procesando",
+    "footer.details": "Detalles del Proceso",
+    "footer.reasoning": "Razonamiento",
+  },
 };
 
 export function t(key: string, locale: Locale): string {
-  return translations[locale]?.[key] ?? key;
+  return translations[locale]?.[key] ?? translations.en[key] ?? key;
 }

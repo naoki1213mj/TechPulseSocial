@@ -115,11 +115,11 @@ export default function InputForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4 shadow-sm"
+      className="glass-card rounded-2xl p-5 space-y-4 shadow-sm hover:shadow-md transition-shadow"
     >
       {/* Topic input */}
       <div>
-        <label className="block text-sm font-medium mb-1.5">
+        <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
           {t("input.topic")}
         </label>
         <textarea
@@ -128,13 +128,13 @@ export default function InputForm({
           ref={textareaRef}
           placeholder={t("input.topic.placeholder")}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none text-sm"
+          className="w-full px-4 py-3 border border-gray-200/60 dark:border-gray-700/60 rounded-xl bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 dark:focus:border-blue-500 outline-none resize-none text-sm transition-all placeholder:text-gray-400"
         />
       </div>
 
       {/* Platforms */}
       <div>
-        <label className="block text-sm font-medium mb-1.5">
+        <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
           {t("input.platforms")}
         </label>
         <div className="flex gap-2">
@@ -143,10 +143,10 @@ export default function InputForm({
               key={p}
               type="button"
               onClick={() => togglePlatform(p)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 platforms.includes(p)
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  ? "platform-chip-active text-white"
+                  : "bg-gray-100/80 dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 hover:bg-gray-200/80 dark:hover:bg-gray-700/80 border border-gray-200/50 dark:border-gray-700/50"
               }`}
             >
               {t(`platforms.${p}`)}
@@ -158,13 +158,13 @@ export default function InputForm({
       {/* Content Type & Language */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1.5">
+          <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
             {t("input.contentType")}
           </label>
           <select
             value={contentType}
             onChange={(e) => setContentType(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm outline-none"
+            className="w-full px-3 py-2 border border-gray-200/60 dark:border-gray-700/60 rounded-xl bg-white/50 dark:bg-gray-800/50 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
           >
             {CONTENT_TYPES.map((ct) => (
               <option key={ct} value={ct}>
@@ -174,26 +174,29 @@ export default function InputForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1.5">
+          <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
             {t("input.language")}
           </label>
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm outline-none"
+            className="w-full px-3 py-2 border border-gray-200/60 dark:border-gray-700/60 rounded-xl bg-white/50 dark:bg-gray-800/50 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
           >
             <option value="en">{t("language.en")}</option>
             <option value="ja">{t("language.ja")}</option>
+            <option value="ko">{t("language.ko")}</option>
+            <option value="zh">{t("language.zh")}</option>
+            <option value="es">{t("language.es")}</option>
           </select>
         </div>
       </div>
 
       {/* AI Settings toggle */}
-      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <div className="border border-gray-200/50 dark:border-gray-700/50 rounded-xl overflow-hidden bg-white/30 dark:bg-gray-800/30">
         <button
           type="button"
           onClick={() => setShowSettings(!showSettings)}
-          className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
         >
           <div className="flex items-center gap-2">
             <Settings2 className="w-4 h-4" />
@@ -274,7 +277,7 @@ export default function InputForm({
           <button
             type="button"
             onClick={onStop}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md"
           >
             <Square className="w-4 h-4" />
             {t("input.stop")}
@@ -283,7 +286,7 @@ export default function InputForm({
           <button
             type="submit"
             disabled={!message.trim() || platforms.length === 0}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 btn-gradient disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold"
           >
             <Send className="w-4 h-4" />
             {t("input.submit")}

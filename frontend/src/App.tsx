@@ -12,7 +12,7 @@ import { streamChat, type ToolEvent } from "./lib/api";
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
-  const { locale, t, toggleLocale } = useI18n("ja");
+  const { locale, setLocale, t, toggleLocale } = useI18n("ja");
 
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState("");
@@ -194,7 +194,7 @@ export default function App() {
   const showEmptyState = !loading && !hasResult && !error;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <Header
         title={t("app.title")}
         subtitle={t("app.subtitle")}
@@ -202,6 +202,7 @@ export default function App() {
         locale={locale}
         onToggleTheme={toggleTheme}
         onToggleLocale={toggleLocale}
+        onSetLocale={setLocale}
       />
 
       <div className="flex-1 flex">
@@ -303,8 +304,10 @@ export default function App() {
       </main>
       </div>
 
-      <footer className="border-t border-gray-200 dark:border-gray-800 py-3 text-center text-xs text-gray-400">
-        TechPulse Social — Agents League @ TechConnect 2026
+      <footer className="border-t border-gray-200/50 dark:border-gray-800/50 py-3 text-center text-xs text-gray-400 dark:text-gray-500 bg-white/30 dark:bg-gray-900/30 backdrop-blur-sm">
+        <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent font-medium">TechPulse Social</span>
+        <span className="mx-1.5">—</span>
+        Agents League @ TechConnect 2026
       </footer>
     </div>
   );
