@@ -9,6 +9,8 @@
 
 > **Agents League @ TechConnect 2026** — Reasoning Agents Track
 
+🌐 **English** | [日本語](README.ja.md)
+
 An AI-powered content creation pipeline for **TechPulse Inc.** that assists the communication team in creating platform-optimized social media content for LinkedIn, X (Twitter), and Instagram.
 
 **Single reasoning agent (gpt-5.2) × 7 tools × 3-phase thinking pipeline × production-grade observability**
