@@ -7,8 +7,10 @@ Provides:
 
 import json
 import logging
+import os
 import re
 import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +18,12 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from src.agent import REASONING_END, REASONING_START, run_agent_stream
 from src.config import DEBUG
+from src.database import (
+    delete_conversation,
+    get_conversation,
+    list_conversations,
+    save_conversation,
+)
 from src.models import ChatRequest
 
 # Configure logging
@@ -32,13 +40,14 @@ app = FastAPI(
     version="0.2.0",
 )
 
-# CORS — allow frontend dev server
+# CORS — allow frontend dev server and deployed origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:3000",
         "http://localhost:8000",
+        "*",  # Allow deployed origin
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -47,6 +56,10 @@ app.add_middleware(
 
 # In-memory conversation history (hackathon scope — no persistence)
 _conversations: dict[str, list[dict]] = {}
+
+# ---------- Serve frontend static files in production ---------- #
+_STATIC_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+_SERVE_STATIC = os.getenv("SERVE_STATIC", "false").lower() == "true"
 
 # Regex for reasoning and tool event markers
 TOOL_EVENT_PATTERN = re.compile(r"__TOOL_EVENT__(.*?)__END_TOOL_EVENT__")
@@ -58,7 +71,33 @@ REASONING_PATTERN = re.compile(
 @app.get("/api/health")
 async def health_check() -> dict:
     """Health check endpoint."""
-    return {"status": "ok", "service": "techpulse-social", "version": "0.2.0"}
+    return {"status": "ok", "service": "techpulse-social", "version": "0.3.0"}
+
+
+# ---------- Conversation History API ---------- #
+
+
+@app.get("/api/conversations")
+async def api_list_conversations() -> list[dict]:
+    """List all conversations."""
+    return list_conversations()
+
+
+@app.get("/api/conversations/{conversation_id}")
+async def api_get_conversation(conversation_id: str):
+    """Get a single conversation with messages."""
+    convo = get_conversation(conversation_id)
+    if convo is None:
+        return JSONResponse(content={"error": "Not found"}, status_code=404)
+    return convo
+
+
+@app.delete("/api/conversations/{conversation_id}")
+async def api_delete_conversation(conversation_id: str):
+    """Delete a conversation."""
+    if delete_conversation(conversation_id):
+        return {"status": "deleted"}
+    return JSONResponse(content={"error": "Not found"}, status_code=404)
 
 
 @app.on_event("startup")
@@ -169,6 +208,14 @@ async def chat(request: Request) -> StreamingResponse:
                 history.append({"role": "assistant", "content": assistant_content})
                 _conversations[thread_id] = history
 
+                # Persist to Cosmos DB (or in-memory fallback)
+                title = chat_req.message[:50].rstrip()
+                save_conversation(
+                    conversation_id=thread_id,
+                    title=title,
+                    messages=history,
+                )
+
             # Send done signal
             done_event = {"type": "done", "thread_id": thread_id}
             yield json.dumps(done_event) + "\n\n"
@@ -186,6 +233,21 @@ async def chat(request: Request) -> StreamingResponse:
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ---------- Mount frontend static files (production) ---------- #
+if _SERVE_STATIC and _STATIC_DIR.is_dir():
+    from fastapi.responses import FileResponse
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str) -> FileResponse:
+        """Serve SPA — return index.html for all non-API routes."""
+        file_path = _STATIC_DIR / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(_STATIC_DIR / "index.html")
+
+    logger.info(f"Serving frontend static files from {_STATIC_DIR}")
 
 
 def main() -> None:

@@ -486,6 +486,8 @@ agent-framework-core # Agent Framework SDK (推移的に以下を含む):
                      #   pydantic, uvicorn, sse-starlette, httpx,
                      #   openai, mcp, opentelemetry, fastapi (starlette)
 azure-identity       # 認証 (DefaultAzureCredential)
+azure-cosmos         # Cosmos DB 会話履歴永続化
+httpx                # Foundry IQ Agentic Retrieval HTTP client
 python-dotenv        # 環境変数
 ```
 
@@ -501,3 +503,37 @@ recharts             # レーダーチャート
 lucide-react         # アイコン
 vite                 # ビルドツール
 ```
+
+## 8. Azure デプロイメント
+
+### Docker マルチステージビルド
+
+```
+Stage 1 (node:22-slim): npm install → npm run build → frontend/dist
+Stage 2 (python:3.12-slim): uv sync → COPY frontend/dist → uvicorn
+```
+
+backend で SERVE_STATIC=true を設定すると、frontend/dist を FastAPI から直接配信。
+
+### Azure Container Apps (azd)
+
+- `azure.yaml` で host: containerapp を定義
+- `infra/main.bicep` で ACR + Log Analytics + Container Apps Environment + Container App を一括プロビジョニング
+- SystemAssigned マネージド ID で Azure AI Foundry に認証
+- `azd up` 一発でプロビジョニング + デプロイ
+
+## 9. Cosmos DB 会話履歴
+
+- `src/database.py` で Cosmos DB 統合
+- パーティションキー: `/userId`（将来のマルチテナント対応）
+- 400 RU でサーバーレススケーリング
+- Cosmos DB 未設定時はインメモリ辞書にフォールバック
+- REST API: `GET /api/conversations`, `GET /api/conversations/{id}`, `DELETE /api/conversations/{id}`
+
+## 10. Foundry IQ Agentic Retrieval
+
+- `src/agentic_retrieval.py` で Azure AI Search Agentic Retrieval API を統合
+- API バージョン: `2025-11-01-preview`
+- ReasoningEffort 3段階: MINIMAL（intents 方式）, LOW/MEDIUM（messages 方式）
+- `@tool` デコレータでエージェントのツールとして自動登録
+- `AI_SEARCH_ENDPOINT` 未設定時は自動スキップ（ツール一覧に含まれない）

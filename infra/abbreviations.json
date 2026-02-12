@@ -1,0 +1,6 @@
+{
+  "containerRegistry": "cr",
+  "logAnalytics": "log-",
+  "containerAppsEnv": "cae-",
+  "containerApp": "ca-"
+}

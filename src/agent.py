@@ -142,6 +142,20 @@ async def run_agent_stream(
             "Run vector_store.py to create one."
         )
 
+    # Add Foundry IQ Agentic Retrieval if configured
+    from src.agentic_retrieval import is_configured as _iq_configured
+    from src.agentic_retrieval import search_knowledge_base
+
+    if _iq_configured():
+        tools.append(search_knowledge_base)
+        logger.info(
+            "Foundry IQ tool enabled (endpoint=%s, kb=%s)",
+            config.AI_SEARCH_ENDPOINT,
+            config.AI_SEARCH_KNOWLEDGE_BASE_NAME,
+        )
+    else:
+        logger.info("Foundry IQ not configured — search_knowledge_base tool disabled")
+
     # Build reasoning options for gpt-5.2
     reasoning_opts: dict = {}
     if reasoning_effort and reasoning_effort != "off":

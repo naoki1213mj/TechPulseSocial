@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ContentDisplay from "./components/ContentDisplay";
 import Header from "./components/Header";
+import HistorySidebar from "./components/HistorySidebar";
 import InputForm from "./components/InputForm";
 import ReasoningPanel from "./components/ReasoningPanel";
 import SuggestedQuestions from "./components/SuggestedQuestions";
@@ -161,6 +162,28 @@ export default function App() {
     [lastSubmitData, handleSubmit],
   );
 
+  /** Handle selecting a conversation from history */
+  const handleSelectConversation = useCallback(async (conversationId: string) => {
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setThreadId(conversationId);
+      // Show last assistant message as content
+      const lastAssistant = [...(data.messages || [])].reverse().find(
+        (m: { role: string }) => m.role === "assistant"
+      );
+      if (lastAssistant) {
+        setContent(lastAssistant.content);
+      }
+      setReasoning("");
+      setToolEvents([]);
+      setError(null);
+    } catch {
+      // Ignore
+    }
+  }, []);
+
   /** Format elapsed time as seconds */
   const elapsedText = loading || elapsedMs > 0
     ? `${(elapsedMs / 1000).toFixed(1)}s`
@@ -181,7 +204,16 @@ export default function App() {
         onToggleLocale={toggleLocale}
       />
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 space-y-4">
+      <div className="flex-1 flex">
+        {/* History Sidebar */}
+        <HistorySidebar
+          currentThreadId={threadId}
+          onSelectConversation={handleSelectConversation}
+          onNewConversation={handleNewConversation}
+          language={locale}
+        />
+
+        <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 space-y-4">
         {/* Empty state — suggested questions */}
         {showEmptyState && (
           <SuggestedQuestions
@@ -269,6 +301,7 @@ export default function App() {
           />
         )}
       </main>
+      </div>
 
       <footer className="border-t border-gray-200 dark:border-gray-800 py-3 text-center text-xs text-gray-400">
         TechPulse Social — Agents League @ TechConnect 2026
