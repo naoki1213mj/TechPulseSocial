@@ -11,3 +11,6 @@ node_modules/
 frontend/dist/
 *.log
 .ruff_cache/
+
+# Diagnostic scripts (not part of the app)
+scripts/test_*.py

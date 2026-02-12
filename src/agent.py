@@ -224,6 +224,38 @@ async def run_agent_stream(
     emitted_tool_ends: set[str] = set()
     # Map call_id → tool_name (function_result may not carry the name)
     call_id_to_name: dict[str, str] = {}
+    # Track which hosted tool NAMES have been detected
+    _detected_hosted: set[str] = set()
+
+    # ----- helpers for hosted tool event emission -----
+    def _emit_start(tool_name: str, item_id: str) -> str | None:
+        if item_id not in emitted_tool_starts:
+            emitted_tool_starts.add(item_id)
+            call_id_to_name[item_id] = tool_name
+            _detected_hosted.add(tool_name)
+            return create_tool_event(tool_name, "started")
+        return None
+
+    def _emit_end(tool_name: str, item_id: str) -> str | None:
+        if item_id not in emitted_tool_ends:
+            emitted_tool_ends.add(item_id)
+            _detected_hosted.add(tool_name)
+            # Ensure start was emitted first
+            if item_id not in emitted_tool_starts:
+                emitted_tool_starts.add(item_id)
+                call_id_to_name[item_id] = tool_name
+            return create_tool_event(tool_name, "completed")
+        return None
+
+    # Mapping of raw event substrings → canonical tool names
+    _HOSTED_PATTERNS: dict[str, str] = {
+        "web_search_call": "web_search",
+        "web_search": "web_search",
+        "file_search_call": "file_search",
+        "file_search": "file_search",
+        "mcp_call": "mcp_search",
+        "mcp_list_tools": "mcp_search",
+    }
 
     try:
         # stream=True returns ResponseStream[AgentResponseUpdate, AgentResponse]
@@ -241,12 +273,6 @@ async def run_agent_stream(
             # Process each Content item in the update
             for content in update.contents or []:
                 ct = getattr(content, "type", None)
-                logger.debug(
-                    "Content type=%s, has_text=%s, text_preview=%s",
-                    ct,
-                    bool(getattr(content, "text", None)),
-                    (getattr(content, "text", "") or "")[:80],
-                )
 
                 if ct == "text_reasoning" and content.text:
                     # GPT-5 reasoning token — accumulate and throttle
@@ -291,152 +317,216 @@ async def run_agent_stream(
                         emitted_tool_ends.add(call_id)
                         yield create_tool_event(tool_name, "completed")
 
+                elif ct in (
+                    "web_search_call",
+                    "file_search_call",
+                    "mcp_call",
+                    "mcp_list_tools",
+                ):
+                    # Hosted tool exposed as a Content item (some SDK versions)
+                    tool_name = _HOSTED_PATTERNS.get(ct, "unknown_tool")
+                    item_id = (
+                        getattr(content, "id", "")
+                        or getattr(content, "call_id", "")
+                        or tool_name
+                    )
+                    ev = _emit_start(tool_name, item_id)
+                    if ev:
+                        yield ev
+
                 elif ct == "text" and content.text:
                     # Regular text output
                     yield content.text
 
+                    # --- Annotation-based hosted tool detection ---
+                    # When text contains url_citation or file_citation,
+                    # it proves the hosted tool was used even if we
+                    # missed the raw events.
+                    annotations = getattr(content, "annotations", None) or []
+                    for ann in annotations:
+                        ann_type = getattr(ann, "type", "")
+                        if (
+                            "url_citation" in ann_type
+                            and "web_search" not in _detected_hosted
+                        ):
+                            ev = _emit_start("web_search", "ws_annotation")
+                            if ev:
+                                yield ev
+                            ev = _emit_end("web_search", "ws_annotation")
+                            if ev:
+                                yield ev
+                        elif (
+                            "file_citation" in ann_type
+                            and "file_search" not in _detected_hosted
+                        ):
+                            ev = _emit_start("file_search", "fs_annotation")
+                            if ev:
+                                yield ev
+                            ev = _emit_end("file_search", "fs_annotation")
+                            if ev:
+                                yield ev
+
+                elif ct == "usage":
+                    # ---- Extract hosted tool usage from ResponseCompletedEvent ----
+                    # The SDK sends a "usage" Content item whose raw_representation
+                    # contains the full ResponseCompletedEvent with Response.output.
+                    # This is our most reliable way to detect hosted tools (web_search,
+                    # file_search, MCP) since the SDK does NOT expose their individual
+                    # streaming events as AgentResponseUpdate objects.
+                    raw = getattr(content, "raw_representation", None)
+                    resp = None
+                    if raw is not None:
+                        resp = getattr(raw, "response", None)
+                    if resp is not None:
+                        for out_item in getattr(resp, "output", []):
+                            item_type = getattr(out_item, "type", "")
+                            for pattern, tool_name in _HOSTED_PATTERNS.items():
+                                if pattern in item_type:
+                                    iid = getattr(out_item, "id", "") or tool_name
+                                    logger.info(
+                                        "Hosted tool from Response.output: "
+                                        "type=%s → %s (id=%s)",
+                                        item_type,
+                                        tool_name,
+                                        iid,
+                                    )
+                                    ev = _emit_start(tool_name, iid)
+                                    if ev:
+                                        yield ev
+                                    ev = _emit_end(tool_name, iid)
+                                    if ev:
+                                        yield ev
+                                    break
+
+                else:
+                    # Unknown content type — log for debugging
+                    if ct:
+                        logger.debug("Unknown content type: %s", ct)
+
             # ---------------------------------------------------------
-            # Detect hosted tool events (web_search, file_search) from
-            # the raw OpenAI stream event.  The agent-framework-core SDK
-            # does NOT parse these into Content objects — they fall
-            # through to `case _: logger.debug(...)`.  However, the raw
-            # event is preserved in raw_representation, so we inspect it
-            # directly to emit tool events for the frontend.
+            # Detect hosted tool events from raw OpenAI stream event.
+            # The agent-framework-core SDK may not parse these into
+            # Content objects.  We inspect raw_representation to catch
+            # web_search_call, file_search_call, and mcp_call events.
             # ---------------------------------------------------------
             raw_event = getattr(update, "raw_representation", None)
+            # Some SDK versions use different attribute names
+            if raw_event is None:
+                raw_event = getattr(update, "raw_event", None)
+
             if raw_event is not None:
-                raw_type = getattr(raw_event, "type", "")
-                # Log all raw events for debugging hosted tool detection
-                if raw_type and ("search" in raw_type or "mcp" in raw_type):
+                # Extract type string from raw event (handle dict or object)
+                if isinstance(raw_event, dict):
+                    raw_type = str(raw_event.get("type", ""))
+                else:
+                    raw_type = str(getattr(raw_event, "type", ""))
+
+                # Log ALL raw events (not just search-related) for debugging
+                if raw_type:
+                    logger.debug("Raw stream event: type=%s", raw_type)
+
+                # --- Unified hosted tool detection from raw_type ---
+                matched_tool = None
+                for pattern, tool_name in _HOSTED_PATTERNS.items():
+                    if pattern in raw_type:
+                        matched_tool = tool_name
+                        break
+
+                if matched_tool:
                     logger.info(
-                        "Hosted tool raw event: type=%s",
+                        "Hosted tool raw event: type=%s → %s",
                         raw_type,
+                        matched_tool,
                     )
 
-                # "response.output_item.added" with item.type == web/file search or mcp
-                if raw_type == "response.output_item.added":
-                    item = getattr(raw_event, "item", None)
-                    if item:
-                        item_type = getattr(item, "type", "")
-                        if item_type in ("web_search_call", "file_search_call"):
-                            tool_name = (
-                                "web_search"
-                                if "web_search" in item_type
-                                else "file_search"
-                            )
-                            item_id = getattr(item, "id", "") or tool_name
-                            if item_id not in emitted_tool_starts:
-                                emitted_tool_starts.add(item_id)
-                                call_id_to_name[item_id] = tool_name
-                                yield create_tool_event(tool_name, "started")
-                        elif item_type in ("mcp_call", "mcp_list_tools"):
-                            item_id = getattr(item, "id", "") or "mcp_search"
-                            if item_id not in emitted_tool_starts:
-                                emitted_tool_starts.add(item_id)
-                                call_id_to_name[item_id] = "mcp_search"
-                                yield create_tool_event("mcp_search", "started")
+                    # Extract item_id from the raw event
+                    if isinstance(raw_event, dict):
+                        item_id = str(
+                            raw_event.get("item_id", "") or raw_event.get("id", "")
+                        )
+                        item = raw_event.get("item")
+                    else:
+                        item_id = str(
+                            getattr(raw_event, "item_id", "")
+                            or getattr(raw_event, "id", "")
+                        )
+                        item = getattr(raw_event, "item", None)
 
-                # "response.web_search_call.*" / "response.file_search_call.*" / "response.mcp_call.*"
-                elif "web_search_call" in raw_type or "file_search_call" in raw_type:
-                    tool_name = (
-                        "web_search" if "web_search_call" in raw_type else "file_search"
-                    )
-                    item_id = getattr(raw_event, "item_id", "") or tool_name
+                    # Try to get item_id from nested item object
+                    if not item_id and item:
+                        if isinstance(item, dict):
+                            item_id = str(item.get("id", ""))
+                        else:
+                            item_id = str(getattr(item, "id", ""))
+                    if not item_id:
+                        item_id = matched_tool
 
-                    if raw_type.endswith(".completed"):
-                        if item_id not in emitted_tool_ends:
-                            emitted_tool_ends.add(item_id)
-                            yield create_tool_event(tool_name, "completed")
-                    elif raw_type.endswith((".in_progress", ".searching")):
-                        # Emit started if not already done via output_item.added
-                        if item_id not in emitted_tool_starts:
-                            emitted_tool_starts.add(item_id)
-                            call_id_to_name[item_id] = tool_name
-                            yield create_tool_event(tool_name, "started")
+                    # Emit start or end based on event type
+                    is_completed = "completed" in raw_type or "done" in raw_type
+                    if is_completed:
+                        ev = _emit_end(matched_tool, item_id)
+                        if ev:
+                            yield ev
+                    else:
+                        ev = _emit_start(matched_tool, item_id)
+                        if ev:
+                            yield ev
 
-                elif "mcp_call" in raw_type or "mcp_list_tools" in raw_type:
-                    item_id = getattr(raw_event, "item_id", "") or "mcp_search"
-                    if raw_type.endswith(".completed"):
-                        if item_id not in emitted_tool_ends:
-                            emitted_tool_ends.add(item_id)
-                            yield create_tool_event("mcp_search", "completed")
-                    elif item_id not in emitted_tool_starts:
-                        emitted_tool_starts.add(item_id)
-                        call_id_to_name[item_id] = "mcp_search"
-                        yield create_tool_event("mcp_search", "started")
+                # --- Also check for output_item events with hosted tool items ---
+                if "output_item" in raw_type:
+                    if isinstance(raw_event, dict):
+                        item = raw_event.get("item", {})
+                        item_type = (
+                            item.get("type", "") if isinstance(item, dict) else ""
+                        )
+                    else:
+                        item = getattr(raw_event, "item", None)
+                        item_type = str(getattr(item, "type", "")) if item else ""
+
+                    for pattern, tool_name in _HOSTED_PATTERNS.items():
+                        if pattern in item_type:
+                            if isinstance(item, dict):
+                                iid = str(item.get("id", "")) or tool_name
+                            else:
+                                iid = (
+                                    str(getattr(item, "id", "")) if item else tool_name
+                                )
+
+                            if "done" in raw_type:
+                                ev = _emit_end(tool_name, iid)
+                                if ev:
+                                    yield ev
+                            else:
+                                ev = _emit_start(tool_name, iid)
+                                if ev:
+                                    yield ev
+                            break
 
             # Fallback: if update has .text but no contents processed
             if not update.contents and update.text:
                 yield update.text
 
-            # Additional fallback: inspect raw_representation dict-like objects
-            # Some SDK versions serialize raw_event differently
-            if raw_event is not None and not isinstance(raw_event, str):
-                try:
-                    raw_dict = (
-                        raw_event
-                        if isinstance(raw_event, dict)
-                        else (
-                            raw_event.model_dump()
-                            if hasattr(raw_event, "model_dump")
-                            else vars(raw_event)
-                            if hasattr(raw_event, "__dict__")
-                            else None
-                        )
-                    )
-                    if raw_dict:
-                        raw_type_str = str(raw_dict.get("type", ""))
-                        if (
-                            "web_search" in raw_type_str
-                            or "file_search" in raw_type_str
-                        ):
-                            tool_name = (
-                                "web_search"
-                                if "web_search" in raw_type_str
-                                else "file_search"
-                            )
-                            item_id = str(
-                                raw_dict.get("item_id", raw_dict.get("id", tool_name))
-                            )
-                            if "completed" in raw_type_str or "done" in raw_type_str:
-                                if item_id not in emitted_tool_ends:
-                                    emitted_tool_ends.add(item_id)
-                                    yield create_tool_event(tool_name, "completed")
-                            elif item_id not in emitted_tool_starts:
-                                emitted_tool_starts.add(item_id)
-                                call_id_to_name[item_id] = tool_name
-                                yield create_tool_event(tool_name, "started")
-                        elif "mcp" in raw_type_str:
-                            item_id = str(
-                                raw_dict.get(
-                                    "item_id", raw_dict.get("id", "mcp_search")
-                                )
-                            )
-                            if "completed" in raw_type_str or "done" in raw_type_str:
-                                if item_id not in emitted_tool_ends:
-                                    emitted_tool_ends.add(item_id)
-                                    yield create_tool_event("mcp_search", "completed")
-                            elif item_id not in emitted_tool_starts:
-                                emitted_tool_starts.add(item_id)
-                                call_id_to_name[item_id] = "mcp_search"
-                                yield create_tool_event("mcp_search", "started")
-                except Exception:
-                    pass  # best-effort fallback
-
-        # ---- Post-stream fallback: emit tool events for hosted tools ----
-        # If the final content references search results but no tool events
-        # were emitted, synthesize them so the frontend knows tools were used.
-        if "web_search" not in emitted_tool_starts and vector_store_id:
-            # No explicit web_search event detected — check if content suggests usage
-            pass  # We already have the raw_representation approach; this is a safety net
-        if (
-            "file_search" not in {call_id_to_name.get(k) for k in emitted_tool_starts}
-            and vector_store_id
-        ):
-            logger.debug(
-                "file_search tool was configured but no events detected. "
-                "This may indicate the SDK did not expose raw events."
-            )
+        # ---- Post-stream: synthesize events for configured but undetected tools ----
+        # If a hosted tool was configured but no events were detected during
+        # streaming, inspect the final response for evidence of usage and emit
+        # synthetic events so the frontend always shows what tools ran.
+        if hasattr(stream, "response"):
+            try:
+                response = stream.response
+                for output_item in getattr(response, "output", []):
+                    item_type = getattr(output_item, "type", "")
+                    for pattern, tool_name in _HOSTED_PATTERNS.items():
+                        if pattern in item_type and tool_name not in _detected_hosted:
+                            iid = getattr(output_item, "id", "") or tool_name
+                            ev = _emit_start(tool_name, iid)
+                            if ev:
+                                yield ev
+                            ev = _emit_end(tool_name, iid)
+                            if ev:
+                                yield ev
+                            break
+            except Exception:
+                pass  # best-effort
 
         # Send final accumulated reasoning
         if accumulated_reasoning:
