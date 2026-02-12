@@ -380,7 +380,7 @@ Returns: `{"relevance": 4.5, "coherence": 5.0, "fluency": 4.0, "groundedness": 4
 ### `GET /api/health`
 
 ```json
-{"status": "ok", "service": "social-ai-studio", "version": "0.4.0", "observability": "opentelemetry"}
+{"status": "ok", "service": "social-ai-studio", "version": "0.4.0", "observability": "opentelemetry", "content_safety": "enabled"}
 ```
 
 ### Other Endpoints

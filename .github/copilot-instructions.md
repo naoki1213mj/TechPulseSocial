@@ -39,6 +39,7 @@ Future roadmap includes multi-agent pipeline (Ideation → Creator → Reviewer)
 │   ├── tools.py          # Custom tools (generate_content, review_content, generate_image)
 │   ├── vector_store.py   # Vector Store setup & FileSearchTool provisioning
 │   ├── database.py       # Cosmos DB conversation history (in-memory fallback)
+│   ├── agentic_retrieval.py # Foundry IQ Agentic Retrieval tool
 │   ├── telemetry.py      # OpenTelemetry + Azure Monitor setup
 │   ├── evaluation.py     # Foundry Evaluation integration
 │   ├── content_safety.py # Azure AI Content Safety (text analysis + prompt shield)
@@ -48,7 +49,8 @@ Future roadmap includes multi-agent pipeline (Ideation → Creator → Reviewer)
 │   └── api.py            # FastAPI + SSE streaming endpoint
 ├── frontend/             # React 19 + TypeScript + Vite + Tailwind v3
 │   ├── src/
-│   │   ├── components/   # InputForm, ContentCard, ReasoningPanel, ToolEvents, SuggestedQuestions
+│   │   ├── components/   # InputForm, ContentCards, ContentDisplay, ReasoningPanel,
+│   │   │                 # ToolEvents, ABCompareCards, HistorySidebar, SuggestedQuestions, Header
 │   │   ├── hooks/        # useTheme, useI18n
 │   │   └── lib/          # api.ts (SSE client), i18n.ts (EN/JA/KO/ZH/ES)
 │   ├── package.json

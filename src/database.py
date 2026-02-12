@@ -42,10 +42,10 @@ def _get_container():
         database = _cosmos_client.create_database_if_not_exists(id=COSMOS_DATABASE)
 
         # Create container with /userId partition key
+        # Note: offer_throughput is omitted for serverless Cosmos DB accounts
         _container = database.create_container_if_not_exists(
             id=COSMOS_CONTAINER,
             partition_key=PartitionKey(path="/userId"),
-            offer_throughput=400,
         )
 
         logger.info(

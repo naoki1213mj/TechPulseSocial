@@ -332,7 +332,7 @@ scores = await evaluate_content(
 
 - `src/database.py` で Cosmos DB 統合
 - パーティションキー: `/userId`（将来のマルチテナント対応）
-- 400 RU でサーバーレススケーリング
+- サーバーレスモード（オンデマンド課金、スループット自動スケーリング）
 - Cosmos DB 未設定時はインメモリ辞書にフォールバック
 - REST API: CRUD 操作 (`GET /api/conversations`, `GET /api/conversations/{id}`, `DELETE /api/conversations/{id}`)
 - メッセージ保存: ユーザーメッセージ + アシスタントレスポンス + ツールイベント

@@ -91,6 +91,7 @@ OpenTelemetry 分散トレーシング、Foundry Evaluation による品質メ�
 | **レスポンス時間** | 全プロセス完了まで 120秒以内目標（reasoning=high 時）|
 | **エラーハンドリング** | 429 レート制限時の retry-after 対応、SSE error イベント |
 | **セキュリティ** | 資格情報はすべて環境変数経由、DefaultAzureCredential |
+| **コンテンツ安全性** | Azure AI Content Safety（テキスト有害分析 + プロンプトシールド）|
 | **可観測性** | OpenTelemetry 分散トレーシング → Application Insights |
 | **品質評価** | Foundry Evaluation SDK (Relevance, Coherence, Fluency, Groundedness) |
 | **データ永続化** | Cosmos DB 会話履歴（InMemory フォールバック）|

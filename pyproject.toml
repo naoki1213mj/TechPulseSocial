@@ -1,7 +1,7 @@
 [project]
-name = "hackfest-techconnect2026"
-version = "0.1.0"
-description = "Reasoning Agents - Social Media Content Creation Agent for TechConnect 2026 Hackathon"
+name = "social-ai-studio"
+version = "0.4.0"
+description = "Social AI Studio — AI-Powered Social Media Content Studio for TechConnect 2026 Hackathon"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
