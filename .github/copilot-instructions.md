@@ -9,12 +9,14 @@ The system features:
 - **gpt-5.2** reasoning agent with controllable reasoning depth and thinking display
 - **File Search** grounding against brand guidelines via Azure AI Vector Store
 - **Web Search** (Bing Grounding) for real-time trend research
+- **MCP Server** integration (Microsoft Learn documentation via Streamable HTTP)
 - **GPT Image generation** (gpt-image-1.5) for social media visuals
+- **A/B Content Comparison** — generate two content variants with different strategies
 - **Structured JSON output** parsed into platform-specific content cards
 - **Real-time SSE streaming** with reasoning process and tool usage visualization
 - **Reasoning phase indicators** (CoT → ReAct → Self-Reflection) visible in the UI
 
-Future roadmap includes multi-agent pipeline (Ideation → Creator → Reviewer), MCP Server integration, Foundry Evaluation metrics, and Content Safety filters.
+Future roadmap includes multi-agent pipeline (Ideation → Creator → Reviewer), Foundry Evaluation metrics, and Content Safety filters.
 
 - **Deadline**: Feb 13, 2026 at 11:59 PM PT
 - **Platform**: Microsoft Foundry (Azure AI Foundry)
@@ -75,7 +77,10 @@ Future roadmap includes multi-agent pipeline (Ideation → Creator → Reviewer)
 
 - **Web Search**: `AzureOpenAIResponsesClient.get_web_search_tool()` — Bing Grounding for real-time trends
 - **File Search**: `AzureOpenAIResponsesClient.get_file_search_tool(vector_store_ids=[...])` — needs Vector Store ID
-- **MCP**: `AzureOpenAIResponsesClient.get_mcp_tool(...)` or `MCPStreamableHTTPTool` for MCP server connections
+- **MCP**: `AzureOpenAIResponsesClient.get_mcp_tool(name="microsoft_learn", url=MCP_SERVER_URL, ...)` — Microsoft Learn Docs (Streamable HTTP)
+  - Server URL: `https://learn.microsoft.com/api/mcp` (no auth required)
+  - Allowed tools: `microsoft_docs_search`, `microsoft_docs_fetch`, `microsoft_code_sample_search`
+  - Agent uses MCP to verify technical claims and enrich content with official references
 
 ### Vector Store Setup
 
@@ -104,13 +109,22 @@ The single agent autonomously progresses through all phases.
 ### Agent Design (Single Agent + Multi-Tool)
 
 - **Architecture**: One agent with 5+ tools
-- Hosted tools: `web_search` (Bing Grounding), `file_search` (Vector Store)
+- Hosted tools: `web_search` (Bing Grounding), `file_search` (Vector Store), `mcp` (Microsoft Learn Docs)
 - Custom tools: `generate_content`, `review_content`, `generate_image`
 - All custom tools use `@tool(approval_mode="never_require")` decorator with `Annotated` parameters
 - Agent created via `AzureOpenAIResponsesClient.as_agent()` — Responses API v1
 - The LLM decides which tools to use and in what order based on context
 - System prompt embeds CoT + ReAct + Self-Reflection directives
 - System prompt instructs structured JSON output for platform-specific content
+- `get_system_prompt(ab_mode=True)` appends A/B comparison addendum for dual-variant generation
+
+### A/B Content Comparison
+
+- Toggle in InputForm AI Settings panel enables A/B mode
+- System prompt addendum instructs agent to produce two content variants with different strategies
+- JSON schema: `{mode: "ab", variant_a: {strategy, contents, review}, variant_b: {strategy, contents, review}, sources_used}`
+- Frontend renders `ABCompareCards` with side-by-side comparison, winner badge, mini radar charts
+- User can select preferred variant to expand into full ContentCards view with all HITL/export features
 
 ### SSE Streaming Design
 

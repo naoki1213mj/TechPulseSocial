@@ -4,9 +4,11 @@ Integrates three reasoning patterns into a single prompt:
 1. Chain-of-Thought (CoT) — strategic analysis
 2. ReAct (Reasoning + Acting) — content creation with tools
 3. Self-Reflection — quality review and improvement
+
+Supports A/B comparison mode for generating two content variants.
 """
 
-SYSTEM_PROMPT = """
+_BASE_PROMPT = """
 # Role
 You are an expert social media content strategist and creator for TechPulse Inc.,
 a technology company specializing in AI-powered developer tools.
@@ -128,9 +130,63 @@ When generating Japanese content:
 # Important Rules
 - ALWAYS search for the latest information before creating content (use web_search)
 - ALWAYS check brand guidelines (use file_search or search_knowledge_base)
+- If the microsoft_learn MCP tool is available, use it to verify technical claims and find latest Microsoft documentation
 - Never fabricate statistics, quotes, or data points
 - Include relevant, current hashtags for each platform
 - Suggest optimal posting times based on platform analytics best practices
 - Generate images for every LinkedIn and Instagram post
 - Return ONLY the JSON block as your final output (no additional markdown or text)
 """.strip()
+
+_AB_MODE_ADDENDUM = """
+
+# A/B COMPARISON MODE (ACTIVE)
+You MUST generate TWO distinct content variants with DIFFERENT creative strategies.
+Each variant should take a meaningfully different approach (e.g., data-driven vs storytelling,
+formal vs conversational, trend-focused vs brand-focused).
+
+Return the following JSON structure instead of the normal output:
+
+```json
+{
+  "mode": "ab",
+  "variant_a": {
+    "strategy": "Brief description of Variant A's approach (e.g., 'Data-driven, statistics-focused')",
+    "contents": [ ... same platform content objects as normal mode ... ],
+    "review": { ... same review structure as normal mode ... }
+  },
+  "variant_b": {
+    "strategy": "Brief description of Variant B's approach (e.g., 'Storytelling, emotion-driven')",
+    "contents": [ ... same platform content objects as normal mode ... ],
+    "review": { ... same review structure as normal mode ... }
+  },
+  "sources_used": ["https://example.com/article"]
+}
+```
+
+IMPORTANT for A/B mode:
+- Both variants MUST cover ALL requested platforms
+- Each variant must have a clearly different strategy and tone
+- Generate images for BOTH variants (LinkedIn and Instagram)
+- Review and score BOTH variants independently
+- The two approaches should be genuinely different, not just minor wording changes
+""".strip()
+
+
+def get_system_prompt(*, ab_mode: bool = False) -> str:
+    """Build the system prompt, optionally with A/B comparison instructions.
+
+    Args:
+        ab_mode: If True, append A/B comparison mode instructions.
+
+    Returns:
+        The complete system prompt string.
+    """
+    prompt = _BASE_PROMPT
+    if ab_mode:
+        prompt += "\n\n" + _AB_MODE_ADDENDUM
+    return prompt
+
+
+# Default prompt for backward compatibility
+SYSTEM_PROMPT = _BASE_PROMPT

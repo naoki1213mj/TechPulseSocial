@@ -26,6 +26,9 @@ AI_SEARCH_KNOWLEDGE_BASE_NAME: str = os.getenv("AI_SEARCH_KNOWLEDGE_BASE_NAME", 
 AI_SEARCH_API_KEY: str = os.getenv("AI_SEARCH_API_KEY", "")
 AI_SEARCH_REASONING_EFFORT: str = os.getenv("AI_SEARCH_REASONING_EFFORT", "low")
 
+# MCP Server (Microsoft Learn)
+MCP_SERVER_URL: str = os.getenv("MCP_SERVER_URL", "https://learn.microsoft.com/api/mcp")
+
 # Azure Cosmos DB
 COSMOS_ENDPOINT: str = os.getenv("COSMOS_ENDPOINT", "")
 COSMOS_DATABASE: str = os.getenv("COSMOS_DATABASE", "techpulse-social")

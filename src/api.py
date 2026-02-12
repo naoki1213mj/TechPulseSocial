@@ -167,6 +167,7 @@ async def chat(request: Request) -> StreamingResponse:
                 history=history[:-1],  # Exclude current message (already in query)
                 reasoning_effort=chat_req.reasoning_effort,
                 reasoning_summary=chat_req.reasoning_summary,
+                ab_mode=chat_req.ab_mode,
             ):
                 if not chunk:
                     continue

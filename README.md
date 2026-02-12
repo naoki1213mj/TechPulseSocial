@@ -224,12 +224,14 @@ This builds a multi-stage Docker image (Node.js frontend → Python backend) and
 
 ### Agent Capabilities
 
-- **6 Tools** — web_search (Bing), file_search (Vector Store), search_knowledge_base (Foundry IQ), generate_content, review_content, generate_image
+- **7 Tools** — web_search (Bing), file_search (Vector Store), mcp (Microsoft Learn Docs), search_knowledge_base (Foundry IQ), generate_content, review_content, generate_image
 - **Controllable Reasoning** — User-adjustable reasoning depth (low/medium/high) and thinking display (off/auto/concise/detailed)
 - **Brand Grounding** — File Search against brand guidelines via Azure AI Vector Store
 - **Enterprise Knowledge** — Foundry IQ Agentic Retrieval for deep document search with configurable reasoning effort
 - **Real-time Trends** — Web Search via Bing Grounding for latest data
+- **MCP Server Integration** — Microsoft Learn Docs via Streamable HTTP for technical claim verification and official references
 - **Image Generation** — gpt-image-1.5 creates platform-optimized visuals
+- **A/B Content Comparison** — Generate two content variants with different strategies for side-by-side evaluation
 - **Structured Output** — Agent returns JSON parsed into platform-specific content cards
 - **Conversation History** — Cosmos DB persistence with in-memory fallback
 
@@ -245,7 +247,8 @@ This builds a multi-stage Docker image (Node.js frontend → Python backend) and
 - **Quality Review** — 5-axis radar chart (recharts) + score bars with overall score gradient display
 - **Content Safety Badge** — Visual indicator showing content passed safety checks
 - **Processing Metrics** — Post-generation stats (reasoning chars, tools used, output chars)
-- **Tool Usage Pills** — Always-visible animated pill badges for each tool (Web Search, File Search, etc.) with gradient glow during execution
+- **A/B Compare Cards** — Side-by-side variant comparison with winner badge, mini radar charts, and variant selection
+- **Tool Usage Pills** — Always-visible animated pill badges for each tool (Web Search, File Search, MCP Docs, etc.) with gradient glow during execution
 - **Skeleton Loading** — Shimmer placeholders during content generation
 - **Card Animations** — Staggered fade-in on content card appearance
 - **Stop / Retry** — Abort generation or retry with one click
@@ -269,7 +272,8 @@ This builds a multi-stage Docker image (Node.js frontend → Python backend) and
   "content_type": "tech_insight",
   "language": "ja",
   "reasoning_effort": "high",
-  "reasoning_summary": "detailed"
+  "reasoning_summary": "detailed",
+  "ab_mode": false
 }
 ```
 

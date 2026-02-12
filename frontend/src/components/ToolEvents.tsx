@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, ClipboardCheck, FileSearch, Globe, ImageIcon, Pencil, Search, Wrench } from "lucide-react";
+import { BookOpen, ChevronDown, ChevronRight, ClipboardCheck, FileSearch, Globe, ImageIcon, Pencil, Search, Wrench } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ToolEvent } from "../lib/api";
 
@@ -50,6 +50,13 @@ const TOOL_CONFIG: Record<string, {
     category: "image",
     gradient: "from-pink-500 to-rose-600",
     completedBg: "bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 border-pink-300 dark:border-pink-700",
+  },
+  mcp_search: {
+    Icon: BookOpen,
+    label: "MCP Docs",
+    category: "search",
+    gradient: "from-cyan-500 to-teal-600",
+    completedBg: "bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700",
   },
 };
 

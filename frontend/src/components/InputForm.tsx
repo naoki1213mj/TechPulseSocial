@@ -11,6 +11,7 @@ interface InputFormProps {
     language: string;
     reasoningEffort: string;
     reasoningSummary: string;
+    abMode: boolean;
   }) => void;
   onStop?: () => void;
   /** Allow external topic injection (from SuggestedQuestions) */
@@ -54,6 +55,7 @@ export default function InputForm({
   const [language, setLanguage] = useState("ja");
   const [reasoningEffort, setReasoningEffort] = useState("medium");
   const [reasoningSummary, setReasoningSummary] = useState("auto");
+  const [abMode, setAbMode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -77,13 +79,14 @@ export default function InputForm({
             language,
             reasoningEffort,
             reasoningSummary,
+            abMode,
           });
         }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [loading, message, platforms, contentType, language, reasoningEffort, reasoningSummary, onSubmit, onStop]);
+  }, [loading, message, platforms, contentType, language, reasoningEffort, reasoningSummary, abMode, onSubmit, onStop]);
 
   // Handle external topic injection
   useEffect(() => {
@@ -109,6 +112,7 @@ export default function InputForm({
       language,
       reasoningEffort,
       reasoningSummary,
+      abMode,
     });
   };
 
@@ -203,6 +207,7 @@ export default function InputForm({
             <span className="font-medium">{t("settings.title")}</span>
             <span className="text-xs text-gray-400 dark:text-gray-500">
               🧠 {reasoningEffort} · {reasoningSummary}
+              {abMode && " · A/B"}
             </span>
           </div>
           {showSettings ? (
@@ -265,6 +270,30 @@ export default function InputForm({
               </div>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 {t(`settings.reasoningSummary.${reasoningSummary}`)}
+              </p>
+            </div>
+
+            {/* A/B Comparison Mode */}
+            <div>
+              <label className="flex items-center justify-between cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-blue-500 to-purple-500 text-white">A/B</span>
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {t("settings.abMode") || "A/B Comparison"}
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={abMode}
+                    onChange={(e) => setAbMode(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 peer-focus:ring-2 peer-focus:ring-blue-500/50 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-purple-500" />
+                </div>
+              </label>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                {t("settings.abMode.description") || "Generate two variants with different strategies for comparison"}
               </p>
             </div>
           </div>

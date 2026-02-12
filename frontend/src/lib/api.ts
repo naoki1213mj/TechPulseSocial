@@ -8,6 +8,7 @@ export interface ChatRequest {
   language: string;
   reasoning_effort: string;
   reasoning_summary: string;
+  ab_mode?: boolean;
 }
 
 export interface ToolEvent {

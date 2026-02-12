@@ -1,4 +1,4 @@
-import { Check, CheckCircle2, Copy, Download, Edit3, ExternalLink, Linkedin, MessageCircle, RefreshCw, Send, ShieldCheck, Twitter, X } from "lucide-react";
+import { Check, CheckCircle2, Copy, Download, Edit3, ExternalLink, Linkedin, MessageCircle, RefreshCw, Send, ShieldCheck, Trophy, Twitter, X } from "lucide-react";
 import { useState } from "react";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer } from "recharts";
 
@@ -29,6 +29,21 @@ export interface ContentReview {
 export interface StructuredOutput {
   contents: PlatformContent[];
   review: ContentReview;
+  sources_used: string[];
+}
+
+/** A/B comparison variant */
+export interface ABVariant {
+  strategy: string;
+  contents: PlatformContent[];
+  review: ContentReview;
+}
+
+/** A/B comparison structured output */
+export interface ABStructuredOutput {
+  mode: "ab";
+  variant_a: ABVariant;
+  variant_b: ABVariant;
   sources_used: string[];
 }
 
@@ -487,6 +502,212 @@ export default function ContentCards({ data, t, onRefine }: ContentCardsProps) {
           {t("export.json")}
         </button>
       </div>
+    </div>
+  );
+}
+
+// ============================================================
+// A/B Comparison View
+// ============================================================
+
+/** Mini score radar for A/B comparison — smaller variant */
+function MiniRadarChart({ review, t }: { review: ContentReview; t: (key: string) => string }) {
+  return (
+    <div className="w-full h-40">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart
+          data={[
+            { metric: t("review.brandAlignment") || "Brand", value: review.scores.brand_alignment },
+            { metric: t("review.audienceRelevance") || "Audience", value: review.scores.audience_relevance },
+            { metric: t("review.engagementPotential") || "Engage", value: review.scores.engagement_potential },
+            { metric: t("review.clarity") || "Clarity", value: review.scores.clarity },
+            { metric: t("review.platformOptimization") || "Platform", value: review.scores.platform_optimization },
+          ]}
+        >
+          <PolarGrid stroke="#e5e7eb" className="dark:stroke-gray-700" />
+          <PolarAngleAxis dataKey="metric" tick={{ fontSize: 8, fill: "#9ca3af" }} />
+          <PolarRadiusAxis angle={90} domain={[0, 10]} tick={false} />
+          <Radar dataKey="value" stroke="#10b981" fill="#10b981" fillOpacity={0.25} strokeWidth={2} />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+interface ABCompareCardsProps {
+  data: ABStructuredOutput;
+  t: (key: string) => string;
+  onRefine?: (platform: string, feedback: string) => void;
+}
+
+export function ABCompareCards({ data, t, onRefine }: ABCompareCardsProps) {
+  const [selected, setSelected] = useState<"a" | "b" | null>(null);
+
+  const variants = [
+    { key: "a" as const, label: "A", data: data.variant_a, gradient: "from-blue-500 to-indigo-600" },
+    { key: "b" as const, label: "B", data: data.variant_b, gradient: "from-purple-500 to-pink-600" },
+  ];
+
+  const winner = data.variant_a.review.overall_score >= data.variant_b.review.overall_score ? "a" : "b";
+
+  return (
+    <div className="space-y-4">
+      {/* A/B Header */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold px-2 py-1 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+            A/B
+          </span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t("ab.title") || "Content Comparison"}
+          </span>
+        </div>
+        {selected && (
+          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {t("ab.selected") || "Selected"}: {t("ab.variant") || "Variant"} {selected.toUpperCase()}
+          </span>
+        )}
+      </div>
+
+      {/* Side-by-side variants */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {variants.map(({ key, label, data: v, gradient }) => {
+          const isWinner = key === winner;
+          const isSelected = key === selected;
+
+          return (
+            <div
+              key={key}
+              className={`relative rounded-xl border-2 transition-all ${
+                isSelected
+                  ? "border-emerald-400 dark:border-emerald-500 shadow-lg shadow-emerald-100 dark:shadow-emerald-950/20"
+                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+              }`}
+            >
+              {/* Variant header */}
+              <div className={`flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r ${gradient} bg-opacity-5`}>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-bold px-2 py-0.5 rounded-md bg-gradient-to-r ${gradient} text-white`}>
+                    {label}
+                  </span>
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300 max-w-[200px] truncate">
+                    {v.strategy}
+                  </span>
+                  {isWinner && (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                      <Trophy className="w-3 h-3" />
+                      {t("ab.winner") || "Higher Score"}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className={`text-lg font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+                    {v.review.overall_score}
+                  </span>
+                  <span className="text-xs text-gray-400">/10</span>
+                </div>
+              </div>
+
+              {/* Content preview */}
+              <div className="p-3 space-y-3">
+                {/* Platform cards mini */}
+                {v.contents.map((item, i) => {
+                  const meta = PLATFORM_META[item.platform] ?? PLATFORM_META.linkedin;
+                  return (
+                    <div key={i} className={`rounded-lg border ${meta.borderColor} ${meta.bgColor} p-3`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={meta.color}>{meta.icon}</span>
+                        <span className="text-xs font-semibold">{meta.label}</span>
+                        <span className="text-[10px] text-gray-400">{item.body.length} chars</span>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-3 whitespace-pre-wrap">
+                        {item.body}
+                      </p>
+                      {item.hashtags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {item.hashtags.slice(0, 5).map((h, j) => (
+                            <span key={j} className="text-[10px] text-blue-500 dark:text-blue-400">
+                              {h.startsWith("#") ? h : `#${h}`}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {item.image_base64 && (
+                        <img
+                          src={`data:image/png;base64,${item.image_base64}`}
+                          alt={`${item.platform} visual`}
+                          className="mt-2 rounded-md w-full h-24 object-cover"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Mini radar chart */}
+                <MiniRadarChart review={v.review} t={t} />
+
+                {/* Select button */}
+                <button
+                  onClick={() => setSelected(key)}
+                  className={`w-full py-2 rounded-lg text-sm font-medium transition-all ${
+                    isSelected
+                      ? "bg-emerald-500 text-white shadow-sm"
+                      : `bg-gradient-to-r ${gradient} bg-opacity-10 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:shadow-sm`
+                  }`}
+                >
+                  {isSelected
+                    ? `✓ ${t("ab.selected") || "Selected"}`
+                    : `${t("ab.select") || "Select"} ${t("ab.variant") || "Variant"} ${label}`
+                  }
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Selected variant full view */}
+      {selected && (
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            {t("ab.fullView") || "Full view"}: {t("ab.variant") || "Variant"} {selected.toUpperCase()} — {selected === "a" ? data.variant_a.strategy : data.variant_b.strategy}
+          </p>
+          <ContentCards
+            data={{
+              contents: selected === "a" ? data.variant_a.contents : data.variant_b.contents,
+              review: selected === "a" ? data.variant_a.review : data.variant_b.review,
+              sources_used: data.sources_used,
+            }}
+            t={t}
+            onRefine={onRefine}
+          />
+        </div>
+      )}
+
+      {/* Sources */}
+      {data.sources_used && data.sources_used.length > 0 && !selected && (
+        <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1.5">
+            {t("content.sources")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {data.sources_used.map((src, i) => (
+              <a
+                key={i}
+                href={src.startsWith("http") ? src : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-[200px]">{src.replace(/^https?:\/\/(www\.)?/, "")}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -59,6 +59,14 @@ class TestChatRequest:
         assert "platforms" in data
         assert isinstance(data["platforms"], list)
 
+    def test_ab_mode_default_false(self):
+        req = ChatRequest(message="test")
+        assert req.ab_mode is False
+
+    def test_ab_mode_enabled(self):
+        req = ChatRequest(message="test", ab_mode=True)
+        assert req.ab_mode is True
+
 
 class TestReviewScores:
     """Test ReviewScores with ge/le validators."""

@@ -17,7 +17,7 @@ from src import config
 from src.agentic_retrieval import is_configured as _iq_configured
 from src.agentic_retrieval import search_knowledge_base
 from src.client import get_client
-from src.prompts import SYSTEM_PROMPT
+from src.prompts import get_system_prompt
 from src.tools import generate_content, generate_image, review_content
 
 logger = logging.getLogger(__name__)
@@ -103,6 +103,7 @@ async def run_agent_stream(
     history: list[dict] | None = None,
     reasoning_effort: str = "medium",
     reasoning_summary: str = "auto",
+    ab_mode: bool = False,
 ) -> AsyncIterator[str]:
     """Execute the agent and yield SSE-formatted events.
 
@@ -119,6 +120,7 @@ async def run_agent_stream(
         history: Conversation history for multi-turn.
         reasoning_effort: GPT-5 reasoning depth (low/medium/high).
         reasoning_summary: Thinking display mode (off/auto/concise/detailed).
+        ab_mode: If True, generate two content variants for A/B comparison.
 
     Yields:
         SSE-formatted strings for each event type.
@@ -145,6 +147,28 @@ async def run_agent_stream(
             "Run vector_store.py to create one."
         )
 
+    # Add MCP tool (Microsoft Learn documentation)
+    if config.MCP_SERVER_URL:
+        mcp_tool = AzureOpenAIResponsesClient.get_mcp_tool(
+            name="microsoft_learn",
+            url=config.MCP_SERVER_URL,
+            description=(
+                "Search and retrieve official Microsoft Learn documentation, "
+                "code samples, and technical guides. Use for verifying facts, "
+                "finding best practices, and latest Azure/Microsoft technology info."
+            ),
+            approval_mode="never_require",
+            allowed_tools=[
+                "microsoft_docs_search",
+                "microsoft_docs_fetch",
+                "microsoft_code_sample_search",
+            ],
+        )
+        tools.append(mcp_tool)
+        logger.info("MCP tool enabled (url=%s)", config.MCP_SERVER_URL)
+    else:
+        logger.info("MCP_SERVER_URL not configured — MCP tool disabled")
+
     # Add Foundry IQ Agentic Retrieval if configured
     if _iq_configured():
         tools.append(search_knowledge_base)
@@ -168,9 +192,10 @@ async def run_agent_stream(
         default_options["reasoning"] = reasoning_opts
 
     # Create agent with all tools (hosted + custom @tool)
+    system_prompt = get_system_prompt(ab_mode=ab_mode)
     agent = client.as_agent(
         name="techpulse_social_agent",
-        instructions=SYSTEM_PROMPT,
+        instructions=system_prompt,
         tools=tools,
         default_options=default_options if default_options else None,
     )
@@ -282,13 +307,13 @@ async def run_agent_stream(
             if raw_event is not None:
                 raw_type = getattr(raw_event, "type", "")
                 # Log all raw events for debugging hosted tool detection
-                if raw_type and "search" in raw_type:
+                if raw_type and ("search" in raw_type or "mcp" in raw_type):
                     logger.info(
                         "Hosted tool raw event: type=%s",
                         raw_type,
                     )
 
-                # "response.output_item.added" with item.type == web/file search
+                # "response.output_item.added" with item.type == web/file search or mcp
                 if raw_type == "response.output_item.added":
                     item = getattr(raw_event, "item", None)
                     if item:
@@ -304,8 +329,14 @@ async def run_agent_stream(
                                 emitted_tool_starts.add(item_id)
                                 call_id_to_name[item_id] = tool_name
                                 yield create_tool_event(tool_name, "started")
+                        elif item_type in ("mcp_call", "mcp_list_tools"):
+                            item_id = getattr(item, "id", "") or "mcp_search"
+                            if item_id not in emitted_tool_starts:
+                                emitted_tool_starts.add(item_id)
+                                call_id_to_name[item_id] = "mcp_search"
+                                yield create_tool_event("mcp_search", "started")
 
-                # "response.web_search_call.*" / "response.file_search_call.*"
+                # "response.web_search_call.*" / "response.file_search_call.*" / "response.mcp_call.*"
                 elif "web_search_call" in raw_type or "file_search_call" in raw_type:
                     tool_name = (
                         "web_search" if "web_search_call" in raw_type else "file_search"
@@ -322,6 +353,17 @@ async def run_agent_stream(
                             emitted_tool_starts.add(item_id)
                             call_id_to_name[item_id] = tool_name
                             yield create_tool_event(tool_name, "started")
+
+                elif "mcp_call" in raw_type or "mcp_list_tools" in raw_type:
+                    item_id = getattr(raw_event, "item_id", "") or "mcp_search"
+                    if raw_type.endswith(".completed"):
+                        if item_id not in emitted_tool_ends:
+                            emitted_tool_ends.add(item_id)
+                            yield create_tool_event("mcp_search", "completed")
+                    elif item_id not in emitted_tool_starts:
+                        emitted_tool_starts.add(item_id)
+                        call_id_to_name[item_id] = "mcp_search"
+                        yield create_tool_event("mcp_search", "started")
 
             # Fallback: if update has .text but no contents processed
             if not update.contents and update.text:
@@ -364,6 +406,20 @@ async def run_agent_stream(
                                 emitted_tool_starts.add(item_id)
                                 call_id_to_name[item_id] = tool_name
                                 yield create_tool_event(tool_name, "started")
+                        elif "mcp" in raw_type_str:
+                            item_id = str(
+                                raw_dict.get(
+                                    "item_id", raw_dict.get("id", "mcp_search")
+                                )
+                            )
+                            if "completed" in raw_type_str or "done" in raw_type_str:
+                                if item_id not in emitted_tool_ends:
+                                    emitted_tool_ends.add(item_id)
+                                    yield create_tool_event("mcp_search", "completed")
+                            elif item_id not in emitted_tool_starts:
+                                emitted_tool_starts.add(item_id)
+                                call_id_to_name[item_id] = "mcp_search"
+                                yield create_tool_event("mcp_search", "started")
                 except Exception:
                     pass  # best-effort fallback
 

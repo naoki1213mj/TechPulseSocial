@@ -30,6 +30,10 @@ class ChatRequest(BaseModel):
         default="auto",
         description="Thinking display: off, auto, concise, detailed",
     )
+    ab_mode: bool = Field(
+        default=False,
+        description="A/B comparison mode: generate two content variants with different strategies",
+    )
 
 
 class ToolEvent(BaseModel):

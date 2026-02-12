@@ -1,7 +1,7 @@
 import { Check, Copy } from "lucide-react";
 import { useMemo, useState } from "react";
 import Markdown from "react-markdown";
-import ContentCards, { type StructuredOutput } from "./ContentCards";
+import ContentCards, { ABCompareCards, type ABStructuredOutput, type StructuredOutput } from "./ContentCards";
 
 interface ContentDisplayProps {
   content: string;
@@ -13,8 +13,9 @@ interface ContentDisplayProps {
 /**
  * Try to parse structured JSON output from the agent response.
  * The agent wraps JSON in ```json fences, or may return raw JSON.
+ * Returns either StructuredOutput or ABStructuredOutput or null.
  */
-function tryParseStructuredOutput(content: string): StructuredOutput | null {
+function tryParseOutput(content: string): { type: "normal"; data: StructuredOutput } | { type: "ab"; data: ABStructuredOutput } | null {
   if (!content) return null;
 
   // Try to extract JSON from ```json ... ``` fences
@@ -26,9 +27,13 @@ function tryParseStructuredOutput(content: string): StructuredOutput | null {
 
   try {
     const parsed = JSON.parse(jsonStr);
-    // Validate minimum structure
+    // A/B comparison mode
+    if (parsed.mode === "ab" && parsed.variant_a && parsed.variant_b) {
+      return { type: "ab", data: parsed as ABStructuredOutput };
+    }
+    // Normal mode
     if (parsed.contents && Array.isArray(parsed.contents) && parsed.contents.length > 0) {
-      return parsed as StructuredOutput;
+      return { type: "normal", data: parsed as StructuredOutput };
     }
   } catch {
     // Not valid JSON yet (might be streaming partial)
@@ -45,8 +50,8 @@ export default function ContentDisplay({
 }: ContentDisplayProps) {
   const [copied, setCopied] = useState(false);
 
-  // Try to parse structured output
-  const structured = useMemo(() => tryParseStructuredOutput(content), [content]);
+  // Try to parse structured output (normal or A/B)
+  const parsed = useMemo(() => tryParseOutput(content), [content]);
 
   if (!content && !isGenerating) return null;
 
@@ -58,9 +63,12 @@ export default function ContentDisplay({
     } catch {}
   };
 
-  // If structured JSON was parsed successfully, show platform cards
-  if (structured && !isGenerating) {
-    return <ContentCards data={structured} t={t} onRefine={onRefine} />;
+  // If structured JSON was parsed successfully, show appropriate cards
+  if (parsed && !isGenerating) {
+    if (parsed.type === "ab") {
+      return <ABCompareCards data={parsed.data} t={t} onRefine={onRefine} />;
+    }
+    return <ContentCards data={parsed.data} t={t} onRefine={onRefine} />;
   }
 
   // Fallback: show raw Markdown (during streaming or for non-JSON output)

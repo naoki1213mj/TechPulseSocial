@@ -99,6 +99,17 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.category.content": "Content",
     "tools.category.review": "Review",
     "tools.category.image": "Image",
+    "tools.category.docs": "Docs",
+
+    // A/B Comparison
+    "settings.abMode": "A/B Comparison",
+    "settings.abMode.description": "Generate two variants with different strategies for comparison",
+    "ab.title": "Content Comparison",
+    "ab.variant": "Variant",
+    "ab.select": "Select",
+    "ab.selected": "Selected",
+    "ab.winner": "Higher Score",
+    "ab.fullView": "Full view",
 
     // Content
     "content.copy": "Copy",
@@ -113,6 +124,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.clarity": "Clarity",
     "review.platformOptimization": "Platform Optimization",
     "review.feedback": "Feedback",
+    "review.safe": "Content Safe",
+    "review.improvements": "Improvements Made",
 
     // Theme / i18n
     "theme.light": "Light",
@@ -216,6 +229,17 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.category.content": "コンテンツ",
     "tools.category.review": "レビュー",
     "tools.category.image": "画像生成",
+    "tools.category.docs": "ドキュメント",
+
+    // A/B比較
+    "settings.abMode": "A/Bコンテンツ比較",
+    "settings.abMode.description": "異なる戦略で2つのバリアントを生成して比較",
+    "ab.title": "コンテンツ比較",
+    "ab.variant": "バリアント",
+    "ab.select": "選択",
+    "ab.selected": "選択済み",
+    "ab.winner": "高スコア",
+    "ab.fullView": "詳細表示",
 
     // Content
     "content.copy": "コピー",
@@ -335,6 +359,17 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.category.content": "콘텐츠",
     "tools.category.review": "리뷰",
     "tools.category.image": "이미지",
+    "tools.category.docs": "문서",
+
+    // A/B 비교
+    "settings.abMode": "A/B 콘텐츠 비교",
+    "settings.abMode.description": "다른 전략으로 두 가지 변형을 생성하여 비교",
+    "ab.title": "콘텐츠 비교",
+    "ab.variant": "변형",
+    "ab.select": "선택",
+    "ab.selected": "선택됨",
+    "ab.winner": "높은 점수",
+    "ab.fullView": "전체 보기",
 
     // Content
     "content.copy": "복사",
@@ -454,6 +489,17 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.category.content": "内容",
     "tools.category.review": "审核",
     "tools.category.image": "图像",
+    "tools.category.docs": "文档",
+
+    // A/B 对比
+    "settings.abMode": "A/B 内容对比",
+    "settings.abMode.description": "用不同策略生成两个变体进行对比",
+    "ab.title": "内容对比",
+    "ab.variant": "变体",
+    "ab.select": "选择",
+    "ab.selected": "已选择",
+    "ab.winner": "高分",
+    "ab.fullView": "完整视图",
 
     // Content
     "content.copy": "复制",
@@ -573,6 +619,17 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.category.content": "Contenido",
     "tools.category.review": "Revisión",
     "tools.category.image": "Imagen",
+    "tools.category.docs": "Documentos",
+
+    // Comparación A/B
+    "settings.abMode": "Comparación A/B",
+    "settings.abMode.description": "Generar dos variantes con diferentes estrategias para comparar",
+    "ab.title": "Comparación de Contenido",
+    "ab.variant": "Variante",
+    "ab.select": "Seleccionar",
+    "ab.selected": "Seleccionado",
+    "ab.winner": "Puntuación Alta",
+    "ab.fullView": "Vista completa",
 
     // Content
     "content.copy": "Copiar",
