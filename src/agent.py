@@ -4,6 +4,7 @@ Creates a single agent with multiple tools and provides streaming execution.
 Uses AzureOpenAIResponsesClient from agent-framework-core.
 """
 
+import asyncio
 import json
 import logging
 import time
@@ -50,6 +51,27 @@ IMAGE_DATA_END = "__END_IMAGE_DATA__"
 
 # Reasoning throttle (only send updates every N ms to avoid flooding)
 REASONING_THROTTLE_MS = 100
+
+# Retry configuration for transient Azure API errors
+MAX_RETRIES = 2
+RETRY_BASE_DELAY_S = 2.0
+
+
+def _is_retryable_error(exc: Exception) -> bool:
+    """Check if an exception is a transient Azure API error worth retrying."""
+    msg = str(exc).lower()
+    # Azure service transient errors
+    if "failed to complete the prompt" in msg:
+        return True
+    if "429" in msg or "rate limit" in msg or "too many requests" in msg:
+        return True
+    if "500" in msg or "502" in msg or "503" in msg or "504" in msg:
+        return True
+    if "internal server error" in msg or "service unavailable" in msg:
+        return True
+    if "timeout" in msg or "timed out" in msg:
+        return True
+    return False
 
 
 def create_tool_event(tool_name: str, status: str, message: str | None = None) -> str:
@@ -298,8 +320,32 @@ async def run_agent_stream(
         # Initialize per-request image store (side-channel for generate_image)
         init_image_store()
 
-        # stream=True returns ResponseStream[AgentResponseUpdate, AgentResponse]
-        stream = agent.run(query, stream=True)
+        # Retry loop for transient Azure API errors (only retries agent.run() init)
+        stream = None
+        for attempt in range(MAX_RETRIES + 1):
+            try:
+                # stream=True returns ResponseStream[AgentResponseUpdate, AgentResponse]
+                stream = agent.run(query, stream=True)
+                break  # Success — proceed to streaming
+            except Exception as run_exc:
+                if _is_retryable_error(run_exc) and attempt < MAX_RETRIES:
+                    delay = RETRY_BASE_DELAY_S * (2 ** attempt)
+                    logger.warning(
+                        "Retryable error on agent.run() attempt %d/%d: %s "
+                        "(retrying in %.1fs)",
+                        attempt + 1,
+                        MAX_RETRIES + 1,
+                        run_exc,
+                        delay,
+                    )
+                    yield create_tool_event(
+                        "retry", "started",
+                        f"Retrying... (attempt {attempt + 2})",
+                    )
+                    await asyncio.sleep(delay)
+                    init_image_store()  # Re-initialize for retry
+                    continue
+                raise  # Non-retryable or exhausted retries
 
         # Accumulate extracted image data for post-stream injection
         stream_result = StreamResult()
@@ -625,9 +671,20 @@ async def run_agent_stream(
         logger.error("Agent execution error: %s", e, exc_info=True)
         pipeline_span.set_status(trace.StatusCode.ERROR, str(e))
         pipeline_span.end()
+        # Provide a user-friendly error message
+        if _is_retryable_error(e):
+            user_message = (
+                "Azure AI サービスが一時的に利用できません。しばらくしてから再度お試しください。"
+                " / The Azure AI service is temporarily unavailable. Please try again shortly."
+            )
+        else:
+            user_message = (
+                "コンテンツ生成中にエラーが発生しました。再度お試しください。"
+                " / An error occurred during content generation. Please try again."
+            )
         error_event = {
             "type": "error",
-            "message": "An internal error occurred during content generation.",
+            "message": user_message,
         }
-        yield json.dumps(error_event) + "\n\n"
+        yield json.dumps(error_event, ensure_ascii=False) + "\n\n"
         raise

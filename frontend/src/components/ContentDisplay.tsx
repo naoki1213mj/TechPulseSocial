@@ -112,6 +112,52 @@ export default function ContentDisplay({
     return <ContentCards data={merged} t={t} onRefine={onRefine} safetyResult={safetyResult} />;
   }
 
+  // Detect if content looks like JSON output (hide raw JSON during streaming)
+  const looksLikeJson = (() => {
+    if (!content) return false;
+    const trimmed = content.trim();
+    // Check for ```json fences or raw JSON object
+    return trimmed.startsWith("```json") || (trimmed.startsWith("{") && trimmed.includes('"contents"'));
+  })();
+
+  // During streaming, if content is JSON, show a generating skeleton instead of raw JSON
+  if (isGenerating && looksLikeJson) {
+    return (
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
+        <div className="px-5 py-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
+            </div>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              {t("input.generating")}
+            </span>
+          </div>
+          {/* Skeleton content cards */}
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="skeleton h-5 w-5 rounded-full" />
+                  <div className="skeleton h-4 w-24" />
+                </div>
+                <div className="skeleton h-3 w-full" />
+                <div className="skeleton h-3 w-5/6" />
+                <div className="skeleton h-3 w-4/6" />
+                <div className="flex gap-2 mt-2">
+                  <div className="skeleton h-5 w-16 rounded-full" />
+                  <div className="skeleton h-5 w-20 rounded-full" />
+                  <div className="skeleton h-5 w-14 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Fallback: show raw Markdown (during streaming or for non-JSON output)
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
