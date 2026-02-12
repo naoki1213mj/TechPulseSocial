@@ -123,7 +123,10 @@ The single agent autonomously progresses through all phases.
 ### Frontend Features
 
 - 🧠 Reasoning process display (collapsible ReasoningIndicator — purple/indigo gradient)
-- 🔧 Tool usage visualization (ToolStatusIndicator — category grouping, per-tool status)
+- 🔧 Tool usage pills (always-visible animated badges with gradient glow — Web Search, File Search, etc.)
+- 📊 Quality radar chart (recharts RadarChart — 5-axis scoring with overall score gradient)
+- 🛡️ Content Safety badge (visual indicator for safety-checked content)
+- 📈 Processing metrics (reasoning chars, tools used, output chars — post-generation stats bar)
 - ⚙️ AI Settings panel (reasoning effort: low/medium/high, reasoning summary: off/auto/concise/detailed)
 - 💡 Suggested questions (empty-state grid with clickable samples)
 - 🖼️ Platform-specific content cards (LinkedIn / X / Instagram) with images

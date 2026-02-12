@@ -211,140 +211,125 @@
 }
 
 /* ============================================
-   Tool Status Indicator (matching reference repo)
+   Tool Events v2 — Always-visible Tool Pills
    ============================================ */
-.tool-status-container {
-  display: flex;
-  flex-direction: column;
-  font-size: 13px;
-  border-radius: 8px;
-  overflow: hidden;
+.tool-events-v2 {
   margin-bottom: 8px;
 }
 
-.tool-status-header {
+/* --- Tool Pill (each tool badge) --- */
+.tool-pill {
+  position: relative;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+  animation: tool-pill-enter 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tool-pill-enter {
+  0% { opacity: 0; transform: scale(0.8) translateY(4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.tool-pill-inner {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  background: rgba(16, 185, 129, 0.06);
-  border: 1px solid rgba(16, 185, 129, 0.15);
-  cursor: pointer;
+  padding: 5px 12px 5px 10px;
+  border-radius: 9999px;
   font-size: 12px;
-  width: fit-content;
-  max-width: 100%;
-  text-align: left;
-  transition: all 0.15s ease;
-  border-radius: 6px;
-  @apply text-gray-600 dark:text-gray-300;
-}
-
-.tool-status-header:hover {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.25);
-}
-
-.tool-toggle-icon {
-  display: flex;
-  align-items: center;
-  color: #10b981;
-}
-
-.tool-summary-text {
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.tool-spinner {
-  font-size: 11px;
-  animation: pulse 1.5s infinite;
-}
-
-.tool-status-list {
-  background: rgba(16, 185, 129, 0.03);
-  border: 1px solid rgba(16, 185, 129, 0.1);
-  border-top: none;
-  border-radius: 0 0 6px 6px;
-  padding: 8px 12px;
-  margin-top: -1px;
-}
-
-.tool-category-group {
-  margin-bottom: 6px;
-}
-
-.tool-category-group:last-child {
-  margin-bottom: 0;
-}
-
-.tool-category-label {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
-  @apply text-gray-400 dark:text-gray-500;
-}
-
-.tool-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-  margin-bottom: 2px;
-  @apply text-gray-700 dark:text-gray-300;
-}
-
-.tool-item:hover {
-  @apply bg-gray-50 dark:bg-gray-800/50;
-}
-
-.tool-item-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.tool-item-name {
   font-weight: 500;
-  flex-shrink: 0;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
 }
 
-.tool-item-status {
-  font-size: 11px;
+/* Running state — gradient border glow */
+.tool-pill-running .tool-pill-inner {
+  @apply bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 border-transparent;
+}
+.tool-pill-running .tool-pill-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  opacity: 0.7;
+  animation: glow-pulse 2s ease-in-out infinite;
+  z-index: 0;
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; filter: blur(0px); }
+  50% { opacity: 0.9; filter: blur(1px); }
 }
 
-.tool-item-status.status-completed {
-  color: #10b981;
+/* Error state */
+.tool-pill-error .tool-pill-inner {
+  @apply bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700;
 }
 
-.tool-item-status.status-running {
-  color: #6366f1;
-  animation: pulse 1.5s infinite;
-}
-
-.tool-item-status.status-error {
-  color: #ef4444;
-}
-
-.tool-item-message {
-  font-size: 11px;
-  @apply text-gray-400 dark:text-gray-500;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.tool-pill-label {
   white-space: nowrap;
 }
 
-.dark .tool-status-header {
-  background: rgba(16, 185, 129, 0.1);
+/* --- Status Badge inside pill --- */
+.tool-pill-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  white-space: nowrap;
 }
-.dark .tool-status-list {
-  background: rgba(16, 185, 129, 0.06);
-  border-color: rgba(16, 185, 129, 0.15);
+.tool-badge-running {
+  @apply bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300;
+}
+.tool-badge-done {
+  @apply bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-300;
+}
+.tool-badge-error {
+  @apply bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-300;
+}
+
+/* Pulsing dot for running state */
+.tool-dot-pulse {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: dot-blink 1.2s ease-in-out infinite;
+  @apply bg-indigo-500 dark:bg-indigo-400;
+}
+@keyframes dot-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.7); }
+}
+
+/* --- Details toggle --- */
+.tool-details-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  @apply text-gray-400 dark:text-gray-500;
+  transition: color 0.15s;
+}
+.tool-details-toggle:hover {
+  @apply text-gray-600 dark:text-gray-300;
+}
+
+/* --- Details panel --- */
+.tool-details-panel {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  @apply bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200/60 dark:border-gray-700/50;
+}
+.tool-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.tool-detail-row + .tool-detail-row {
+  @apply border-t border-gray-100 dark:border-gray-700/40;
 }
 
 /* ============================================

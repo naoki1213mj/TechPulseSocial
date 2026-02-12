@@ -261,9 +261,27 @@ export default function App() {
             )}
             {!loading && hasResult && (
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
-                  ✅ {t("status.complete")} — {elapsedText}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
+                    ✅ {t("status.complete")} — {elapsedText}
+                  </span>
+                  {/* Quick metrics */}
+                  {reasoning && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 dark:text-indigo-400 font-medium">
+                      🧠 {reasoning.length.toLocaleString()} {t("metrics.reasoningChars") || "chars reasoning"}
+                    </span>
+                  )}
+                  {toolEvents.length > 0 && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 dark:text-emerald-400 font-medium">
+                      🛠️ {new Set(toolEvents.map(e => e.tool)).size} {t("metrics.toolsUsed") || "tools"}
+                    </span>
+                  )}
+                  {content && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/30 text-blue-500 dark:text-blue-400 font-medium">
+                      📝 {content.length.toLocaleString()} {t("metrics.outputChars") || "chars output"}
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={handleNewConversation}
                   className="text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors"

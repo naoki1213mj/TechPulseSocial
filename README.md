@@ -13,7 +13,7 @@ graph TB
         Cards[Platform Content Cards]
         HITL["HITL Controls<br/>Approve / Edit / Refine"]
         Reasoning["ReasoningPanel<br/>Phase Badges"]
-        Tools[ToolStatusIndicator]
+        Tools["Tool Pills<br/>Real-time Badges"]
         Export["Export .md / .json"]
         History["HistorySidebar<br/>Conversation List"]
     end
@@ -242,9 +242,10 @@ This builds a multi-stage Docker image (Node.js frontend → Python backend) and
 - **Reasoning Phase Badges** — Live CoT → ReAct → Self-Reflection phase indicators with pulse animation
 - **Generated Images** — Displayed inline in content cards
 - **Reasoning Visualization** — Collapsible panel with purple/indigo gradient showing CoT process
-- **Tool Usage Timeline** — Category-grouped tool status with completion indicators
-- **AI Settings Panel** — Control reasoning effort and summary display
-- **Quality Review** — 5-axis score bars (brand alignment, audience relevance, engagement, clarity, platform optimization)
+- **Quality Review** — 5-axis radar chart (recharts) + score bars with overall score gradient display
+- **Content Safety Badge** — Visual indicator showing content passed safety checks
+- **Processing Metrics** — Post-generation stats (reasoning chars, tools used, output chars)
+- **Tool Usage Pills** — Always-visible animated pill badges for each tool (Web Search, File Search, etc.) with gradient glow during execution
 - **Skeleton Loading** — Shimmer placeholders during content generation
 - **Card Animations** — Staggered fade-in on content card appearance
 - **Stop / Retry** — Abort generation or retry with one click

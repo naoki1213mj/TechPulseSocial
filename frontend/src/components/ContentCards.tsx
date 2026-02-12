@@ -1,5 +1,6 @@
-import { Check, CheckCircle2, Copy, Download, Edit3, Linkedin, MessageCircle, RefreshCw, Send, Twitter, X } from "lucide-react";
+import { Check, CheckCircle2, Copy, Download, Edit3, ExternalLink, Linkedin, MessageCircle, RefreshCw, Send, ShieldCheck, Twitter, X } from "lucide-react";
 import { useState } from "react";
+import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer } from "recharts";
 
 /** Structured content from the agent's JSON output */
 export interface PlatformContent {
@@ -358,23 +359,67 @@ export default function ContentCards({ data, t, onRefine }: ContentCardsProps) {
         ))}
       </div>
 
-      {/* Quality Review */}
+      {/* Quality Review — Radar Chart + Scores */}
       {review && review.overall_score > 0 && (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900">
-            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
               {t("review.title")}
+              {/* Content Safety Badge */}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700">
+                <ShieldCheck className="w-3 h-3" />
+                {t("review.safe") || "Content Safe"}
+              </span>
             </span>
-            <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-              {review.overall_score}/10
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                {review.overall_score}
+              </span>
+              <span className="text-sm text-gray-400 dark:text-gray-500">/10</span>
+            </div>
           </div>
-          <div className="px-4 py-3 space-y-2">
-            <ScoreBar score={review.scores.brand_alignment} label={t("review.brandAlignment")} />
-            <ScoreBar score={review.scores.audience_relevance} label={t("review.audienceRelevance")} />
-            <ScoreBar score={review.scores.engagement_potential} label={t("review.engagementPotential")} />
-            <ScoreBar score={review.scores.clarity} label={t("review.clarity")} />
-            <ScoreBar score={review.scores.platform_optimization} label={t("review.platformOptimization")} />
+          <div className="flex flex-col md:flex-row">
+            {/* Radar Chart */}
+            <div className="flex-shrink-0 w-full md:w-56 h-52 p-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart
+                  data={[
+                    { metric: t("review.brandAlignment") || "Brand", value: review.scores.brand_alignment, max: 10 },
+                    { metric: t("review.audienceRelevance") || "Audience", value: review.scores.audience_relevance, max: 10 },
+                    { metric: t("review.engagementPotential") || "Engagement", value: review.scores.engagement_potential, max: 10 },
+                    { metric: t("review.clarity") || "Clarity", value: review.scores.clarity, max: 10 },
+                    { metric: t("review.platformOptimization") || "Platform", value: review.scores.platform_optimization, max: 10 },
+                  ]}
+                >
+                  <PolarGrid stroke="#e5e7eb" className="dark:stroke-gray-700" />
+                  <PolarAngleAxis
+                    dataKey="metric"
+                    tick={{ fontSize: 9, fill: "#9ca3af" }}
+                  />
+                  <PolarRadiusAxis
+                    angle={90}
+                    domain={[0, 10]}
+                    tick={{ fontSize: 8 }}
+                    tickCount={3}
+                  />
+                  <Radar
+                    dataKey="value"
+                    stroke="#10b981"
+                    fill="#10b981"
+                    fillOpacity={0.25}
+                    strokeWidth={2}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Score Bars */}
+            <div className="flex-1 px-4 py-3 space-y-2">
+              <ScoreBar score={review.scores.brand_alignment} label={t("review.brandAlignment")} />
+              <ScoreBar score={review.scores.audience_relevance} label={t("review.audienceRelevance")} />
+              <ScoreBar score={review.scores.engagement_potential} label={t("review.engagementPotential")} />
+              <ScoreBar score={review.scores.clarity} label={t("review.clarity")} />
+              <ScoreBar score={review.scores.platform_optimization} label={t("review.platformOptimization")} />
+            </div>
           </div>
           {review.feedback.length > 0 && (
             <div className="px-4 pb-3">
@@ -386,13 +431,42 @@ export default function ContentCards({ data, t, onRefine }: ContentCardsProps) {
               </ul>
             </div>
           )}
+          {review.improvements_made && review.improvements_made.length > 0 && (
+            <div className="px-4 pb-3">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{t("review.improvements") || "Improvements Made"}</p>
+              <ul className="text-xs text-gray-600 dark:text-gray-300 space-y-0.5">
+                {review.improvements_made.map((imp, i) => (
+                  <li key={i} className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                    {imp}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Sources */}
+      {/* Sources — upgraded with link icons */}
       {sources_used && sources_used.length > 0 && (
-        <div className="text-xs text-gray-400 dark:text-gray-500 px-1">
-          {t("content.sources")}: {sources_used.join(", ")}
+        <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1.5">
+            {t("content.sources")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {sources_used.map((src, i) => (
+              <a
+                key={i}
+                href={src.startsWith("http") ? src : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-[200px]">{src.replace(/^https?:\/\/(www\.)?/, "")}</span>
+              </a>
+            ))}
+          </div>
         </div>
       )}
 

@@ -31,6 +31,9 @@ const translations: Record<Locale, Record<string, string>> = {
     // Status
     "status.complete": "Complete",
     "action.newConversation": "New Conversation",
+    "metrics.reasoningChars": "chars reasoning",
+    "metrics.toolsUsed": "tools",
+    "metrics.outputChars": "chars output",
 
     // HITL
     "hitl.approve": "Approve",
@@ -90,6 +93,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.used": "tools used",
     "tools.started": "Running",
     "tools.completed": "Completed",
+    "tools.error": "Error",
+    "tools.waiting": "Analyzing...",
     "tools.category.search": "Search",
     "tools.category.content": "Content",
     "tools.category.review": "Review",
@@ -143,6 +148,9 @@ const translations: Record<Locale, Record<string, string>> = {
     // Status
     "status.complete": "完了",
     "action.newConversation": "新しい会話",
+    "metrics.reasoningChars": "文字の推論",
+    "metrics.toolsUsed": "ツール",
+    "metrics.outputChars": "文字の出力",
 
     // HITL
     "hitl.approve": "承認",
@@ -202,6 +210,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.used": "個のツールを使用",
     "tools.started": "実行中",
     "tools.completed": "完了",
+    "tools.error": "エラー",
+    "tools.waiting": "分析中...",
     "tools.category.search": "検索",
     "tools.category.content": "コンテンツ",
     "tools.category.review": "レビュー",
@@ -220,6 +230,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.clarity": "明確さ",
     "review.platformOptimization": "プラットフォーム最適化",
     "review.feedback": "フィードバック",
+    "review.improvements": "改善内容",
+    "review.safe": "安全性確認済み",
 
     // Theme / i18n
     "theme.light": "ライト",
@@ -255,6 +267,9 @@ const translations: Record<Locale, Record<string, string>> = {
     // Status
     "status.complete": "완료",
     "action.newConversation": "새 대화",
+    "metrics.reasoningChars": "문자 추론",
+    "metrics.toolsUsed": "도구",
+    "metrics.outputChars": "문자 출력",
 
     // HITL
     "hitl.approve": "승인",
@@ -314,6 +329,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.used": "개 도구 사용됨",
     "tools.started": "실행 중",
     "tools.completed": "완료",
+    "tools.error": "오류",
+    "tools.waiting": "분석 중...",
     "tools.category.search": "검색",
     "tools.category.content": "콘텐츠",
     "tools.category.review": "리뷰",
@@ -332,6 +349,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.clarity": "명확성",
     "review.platformOptimization": "플랫폼 최적화",
     "review.feedback": "피드백",
+    "review.improvements": "개선 사항",
+    "review.safe": "콘텐츠 안전",
 
     // Theme / i18n
     "theme.light": "라이트",
@@ -367,6 +386,9 @@ const translations: Record<Locale, Record<string, string>> = {
     // Status
     "status.complete": "完成",
     "action.newConversation": "新建对话",
+    "metrics.reasoningChars": "字符推理",
+    "metrics.toolsUsed": "工具",
+    "metrics.outputChars": "字符输出",
 
     // HITL
     "hitl.approve": "批准",
@@ -426,6 +448,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.used": "个工具已使用",
     "tools.started": "运行中",
     "tools.completed": "完成",
+    "tools.error": "错误",
+    "tools.waiting": "分析中...",
     "tools.category.search": "搜索",
     "tools.category.content": "内容",
     "tools.category.review": "审核",
@@ -444,6 +468,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.clarity": "清晰度",
     "review.platformOptimization": "平台优化",
     "review.feedback": "反馈",
+    "review.improvements": "改进内容",
+    "review.safe": "内容安全",
 
     // Theme / i18n
     "theme.light": "浅色",
@@ -479,6 +505,9 @@ const translations: Record<Locale, Record<string, string>> = {
     // Status
     "status.complete": "Completado",
     "action.newConversation": "Nueva Conversación",
+    "metrics.reasoningChars": "caracteres razonamiento",
+    "metrics.toolsUsed": "herramientas",
+    "metrics.outputChars": "caracteres salida",
 
     // HITL
     "hitl.approve": "Aprobar",
@@ -538,6 +567,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "tools.used": "herramientas utilizadas",
     "tools.started": "Ejecutando",
     "tools.completed": "Completado",
+    "tools.error": "Error",
+    "tools.waiting": "Analizando...",
     "tools.category.search": "Búsqueda",
     "tools.category.content": "Contenido",
     "tools.category.review": "Revisión",
@@ -556,6 +587,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.clarity": "Claridad",
     "review.platformOptimization": "Optimización de Plataforma",
     "review.feedback": "Feedback",
+    "review.improvements": "Mejoras Realizadas",
+    "review.safe": "Contenido Seguro",
 
     // Theme / i18n
     "theme.light": "Claro",
