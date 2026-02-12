@@ -8,7 +8,7 @@ import SuggestedQuestions from "./components/SuggestedQuestions";
 import ToolEvents from "./components/ToolEvents";
 import { useI18n } from "./hooks/useI18n";
 import { useTheme } from "./hooks/useTheme";
-import { streamChat, type ToolEvent } from "./lib/api";
+import { streamChat, type SafetyResult, type ToolEvent } from "./lib/api";
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
@@ -18,6 +18,7 @@ export default function App() {
   const [content, setContent] = useState("");
   const [reasoning, setReasoning] = useState("");
   const [toolEvents, setToolEvents] = useState<ToolEvent[]>([]);
+  const [safetyResult, setSafetyResult] = useState<SafetyResult | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [suggestedTopic, setSuggestedTopic] = useState<string>("");
@@ -62,6 +63,7 @@ export default function App() {
     setError(null);
     setElapsedMs(0);
     setLastSubmitData(null);
+    setSafetyResult(null);
   }, []);
 
   const handleSubmit = useCallback(
@@ -88,6 +90,7 @@ export default function App() {
       setReasoning("");
       setToolEvents([]);
       setError(null);
+      setSafetyResult(null);
 
       try {
         for await (const chunk of streamChat(
@@ -126,6 +129,11 @@ export default function App() {
           // Error
           if (chunk.error) {
             setError(chunk.error);
+          }
+
+          // Safety result from Content Safety analysis
+          if (chunk.safety) {
+            setSafetyResult(chunk.safety);
           }
 
           // Done
@@ -181,6 +189,7 @@ export default function App() {
       setReasoning("");
       setToolEvents([]);
       setError(null);
+      setSafetyResult(null);
     } catch {
       // Ignore
     }
@@ -319,6 +328,7 @@ export default function App() {
             t={t}
             isGenerating={loading}
             onRefine={handleRefine}
+            safetyResult={safetyResult}
           />
         )}
       </main>

@@ -1,6 +1,7 @@
-import { Check, CheckCircle2, Copy, Download, Edit3, ExternalLink, Linkedin, MessageCircle, RefreshCw, Send, ShieldCheck, Trophy, Twitter, X } from "lucide-react";
+import { Check, CheckCircle2, Copy, Download, Edit3, ExternalLink, Linkedin, MessageCircle, RefreshCw, Send, ShieldAlert, ShieldCheck, Trophy, Twitter, X } from "lucide-react";
 import { useState } from "react";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer } from "recharts";
+import type { SafetyResult } from "../lib/api";
 
 /** Structured content from the agent's JSON output */
 export interface PlatformContent {
@@ -51,6 +52,7 @@ interface ContentCardsProps {
   data: StructuredOutput;
   t: (key: string) => string;
   onRefine?: (platform: string, feedback: string) => void;
+  safetyResult?: SafetyResult | null;
 }
 
 /** Platform metadata for display */
@@ -352,7 +354,7 @@ function toMarkdown(data: StructuredOutput): string {
   return lines.join("\n");
 }
 
-export default function ContentCards({ data, t, onRefine }: ContentCardsProps) {
+export default function ContentCards({ data, t, onRefine, safetyResult }: ContentCardsProps) {
   const { contents, review, sources_used } = data;
 
   const handleExportMarkdown = () => {
@@ -380,11 +382,25 @@ export default function ContentCards({ data, t, onRefine }: ContentCardsProps) {
           <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900">
             <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
               {t("review.title")}
-              {/* Content Safety Badge */}
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700">
-                <ShieldCheck className="w-3 h-3" />
-                {t("review.safe") || "Content Safe"}
-              </span>
+              {/* Content Safety Badge — dynamic based on real safety analysis */}
+              {safetyResult ? (
+                safetyResult.safe ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700">
+                    <ShieldCheck className="w-3 h-3" />
+                    {t("review.safe") || "Content Safe"}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700">
+                    <ShieldAlert className="w-3 h-3" />
+                    {t("review.unsafe") || "Safety Issue"}
+                  </span>
+                )
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600">
+                  <ShieldCheck className="w-3 h-3" />
+                  {t("review.safetyPending") || "Checking..."}
+                </span>
+              )}
             </span>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">

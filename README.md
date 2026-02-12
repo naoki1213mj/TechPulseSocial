@@ -28,7 +28,8 @@ _Coming soon — 3 min walkthrough of the full reasoning pipeline_
 | 👤 **HITL Workflow** | Approve ✅ / Edit ✏️ / Refine 🔄 per platform card |
 | 📊 **Quality Scoring** | 5-axis radar chart + Foundry Evaluation (Relevance, Coherence, Fluency, Groundedness) |
 | 🔍 **Observability** | OpenTelemetry → Azure Application Insights → Foundry Tracing |
-| 🖼️ **Image Generation** | gpt-image-1.5 creates platform-optimized visuals |
+| �️ **Content Safety** | Azure AI Content Safety (text analysis + prompt shield) with real-time badge |
+| �🖼️ **Image Generation** | gpt-image-1.5 creates platform-optimized visuals |
 | 💾 **Persistence** | Cosmos DB conversation history with in-memory fallback |
 | 🌐 **5-Language i18n** | EN / JA / KO / ZH / ES with flag-based selector |
 | 🌙 **Dark / Light Mode** | System-preference-aware theme switching |
@@ -160,6 +161,30 @@ AI-assisted quality metrics for generated content:
 
 These complement the agent's built-in 5-axis self-review (brand alignment, platform optimization, engagement potential, factual accuracy, content quality) for a **dual evaluation system**.
 
+## 🛡️ Content Safety
+
+Azure AI Content Safety integration provides multi-layered protection:
+
+### Input Protection — Prompt Shield
+
+- Detects **prompt injection attacks** in user input before agent processing
+- Blocks malicious prompts with clear error messages
+- Uses `ShieldPromptOptions` from Azure AI Content Safety SDK
+
+### Output Moderation — Text Analysis
+
+- Analyzes generated content across **4 harm categories**: Hate, SelfHarm, Sexual, Violence
+- Configurable severity threshold (default: 2 on 0-6 scale)
+- Results sent via SSE as a `safety` event — dynamic badge in the UI
+
+### Safety Badge
+
+- 🟢 **Content Safe** — All categories below threshold
+- 🔴 **Safety Issue** — One or more categories flagged
+- ⚪ **Checking...** — Analysis in progress
+
+Gracefully optional — if `CONTENT_SAFETY_ENDPOINT` is not set, safety checks are skipped and content flows normally.
+
 ## 👤 Human-in-the-Loop (HITL) Workflow
 
 Each platform content card includes:
@@ -278,6 +303,7 @@ This builds a multi-stage Docker image (Node.js frontend → Python backend) and
 │   ├── agentic_retrieval.py # Foundry IQ Agentic Retrieval tool
 │   ├── telemetry.py         # OpenTelemetry + Azure Monitor setup
 │   ├── evaluation.py        # Foundry Evaluation integration (azure-ai-evaluation)
+│   ├── content_safety.py    # Azure AI Content Safety (text analysis + prompt shield)
 │   ├── models.py            # Pydantic data models
 │   ├── prompts/
 │   │   └── system_prompt.py # 3-phase reasoning prompt (CoT + ReAct + Self-Reflection)
@@ -416,4 +442,4 @@ uv run python -m pytest tests/ --cov=src --cov-report=term-missing
 
 ## License
 
-Hackathon project — Agents League @ TechConnect 2026
+[MIT License](LICENSE)

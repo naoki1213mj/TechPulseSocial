@@ -125,6 +125,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.platformOptimization": "Platform Optimization",
     "review.feedback": "Feedback",
     "review.safe": "Content Safe",
+    "review.unsafe": "Safety Issue",
+    "review.safetyPending": "Checking...",
     "review.improvements": "Improvements Made",
 
     // Theme / i18n
@@ -256,6 +258,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.feedback": "フィードバック",
     "review.improvements": "改善内容",
     "review.safe": "安全性確認済み",
+    "review.unsafe": "安全性の問題",
+    "review.safetyPending": "確認中...",
 
     // Theme / i18n
     "theme.light": "ライト",
@@ -386,6 +390,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.feedback": "피드백",
     "review.improvements": "개선 사항",
     "review.safe": "콘텐츠 안전",
+    "review.unsafe": "안전 문제",
+    "review.safetyPending": "확인 중...",
 
     // Theme / i18n
     "theme.light": "라이트",
@@ -516,6 +522,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.feedback": "反馈",
     "review.improvements": "改进内容",
     "review.safe": "内容安全",
+    "review.unsafe": "安全问题",
+    "review.safetyPending": "检查中...",
 
     // Theme / i18n
     "theme.light": "浅色",
@@ -646,6 +654,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "review.feedback": "Feedback",
     "review.improvements": "Mejoras Realizadas",
     "review.safe": "Contenido Seguro",
+    "review.unsafe": "Problema de Seguridad",
+    "review.safetyPending": "Verificando...",
 
     // Theme / i18n
     "theme.light": "Claro",

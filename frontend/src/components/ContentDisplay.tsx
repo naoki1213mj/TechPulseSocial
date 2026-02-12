@@ -1,6 +1,7 @@
 import { Check, Copy } from "lucide-react";
 import { useMemo, useState } from "react";
 import Markdown from "react-markdown";
+import type { SafetyResult } from "../lib/api";
 import ContentCards, { ABCompareCards, type ABStructuredOutput, type StructuredOutput } from "./ContentCards";
 
 interface ContentDisplayProps {
@@ -8,6 +9,7 @@ interface ContentDisplayProps {
   t: (key: string) => string;
   isGenerating: boolean;
   onRefine?: (platform: string, feedback: string) => void;
+  safetyResult?: SafetyResult | null;
 }
 
 /**
@@ -47,6 +49,7 @@ export default function ContentDisplay({
   t,
   isGenerating,
   onRefine,
+  safetyResult,
 }: ContentDisplayProps) {
   const [copied, setCopied] = useState(false);
 
@@ -68,7 +71,7 @@ export default function ContentDisplay({
     if (parsed.type === "ab") {
       return <ABCompareCards data={parsed.data} t={t} onRefine={onRefine} />;
     }
-    return <ContentCards data={parsed.data} t={t} onRefine={onRefine} />;
+    return <ContentCards data={parsed.data} t={t} onRefine={onRefine} safetyResult={safetyResult} />;
   }
 
   // Fallback: show raw Markdown (during streaming or for non-JSON output)

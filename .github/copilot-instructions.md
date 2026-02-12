@@ -15,8 +15,9 @@ The system features:
 - **Structured JSON output** parsed into platform-specific content cards
 - **Real-time SSE streaming** with reasoning process and tool usage visualization
 - **Reasoning phase indicators** (CoT → ReAct → Self-Reflection) visible in the UI
+- **Content Safety** — Azure AI Content Safety (prompt shield + text moderation) with dynamic UI badge
 
-Future roadmap includes multi-agent pipeline (Ideation → Creator → Reviewer), Foundry Evaluation metrics, and Content Safety filters.
+Future roadmap includes multi-agent pipeline (Ideation → Creator → Reviewer).
 
 - **Deadline**: Feb 13, 2026 at 11:59 PM PT
 - **Platform**: Microsoft Foundry (Azure AI Foundry)
@@ -37,6 +38,10 @@ Future roadmap includes multi-agent pipeline (Ideation → Creator → Reviewer)
 │   ├── agent.py          # Agent creation, reasoning options, SSE streaming
 │   ├── tools.py          # Custom tools (generate_content, review_content, generate_image)
 │   ├── vector_store.py   # Vector Store setup & FileSearchTool provisioning
+│   ├── database.py       # Cosmos DB conversation history (in-memory fallback)
+│   ├── telemetry.py      # OpenTelemetry + Azure Monitor setup
+│   ├── evaluation.py     # Foundry Evaluation integration
+│   ├── content_safety.py # Azure AI Content Safety (text analysis + prompt shield)
 │   ├── models.py         # Pydantic data models (ChatRequest, etc.)
 │   ├── prompts/          # System prompt module (external)
 │   │   └── system_prompt.py
@@ -139,7 +144,7 @@ The single agent autonomously progresses through all phases.
 - 🧠 Reasoning process display (collapsible ReasoningIndicator — purple/indigo gradient)
 - 🔧 Tool usage pills (always-visible animated badges with gradient glow — Web Search, File Search, etc.)
 - 📊 Quality radar chart (recharts RadarChart — 5-axis scoring with overall score gradient)
-- 🛡️ Content Safety badge (visual indicator for safety-checked content)
+- 🛡️ Content Safety badge (dynamic — real Azure AI Content Safety analysis, not just visual)
 - 📈 Processing metrics (reasoning chars, tools used, output chars — post-generation stats bar)
 - ⚙️ AI Settings panel (reasoning effort: low/medium/high, reasoning summary: off/auto/concise/detailed)
 - 💡 Suggested questions (empty-state grid with clickable samples)

@@ -3,6 +3,7 @@
 Provides:
 - POST /api/chat — Streaming chat endpoint (SSE)
 - POST /api/evaluate — Content quality evaluation (Foundry Evaluation)
+- POST /api/safety — Content safety analysis
 - GET /api/health — Health check
 """
 
@@ -26,6 +27,12 @@ from fastapi.responses import JSONResponse, StreamingResponse  # noqa: E402
 
 from src.agent import REASONING_END, REASONING_START, run_agent_stream  # noqa: E402
 from src.config import DEBUG  # noqa: E402
+from src.content_safety import (
+    analyze_safety,
+    check_prompt_shield,
+    format_safety_summary,
+)
+from src.content_safety import is_configured as safety_configured  # noqa: E402
 from src.database import (  # noqa: E402
     delete_conversation,
     get_conversation,
@@ -106,6 +113,7 @@ async def health_check() -> dict:
         "service": "techpulse-social",
         "version": "0.4.0",
         "observability": "opentelemetry",
+        "content_safety": "enabled" if safety_configured() else "not_configured",
     }
 
 
@@ -157,6 +165,19 @@ async def chat(request: Request) -> StreamingResponse:
 
     # Thread ID for multi-turn
     thread_id = chat_req.thread_id or str(uuid.uuid4())
+
+    # ---- Prompt Shield: detect prompt injection attacks ----
+    shield_result = await check_prompt_shield(chat_req.message)
+    if not shield_result.get("safe", True) and shield_result.get("attack_detected"):
+        logger.warning("Prompt shield blocked input (thread=%s)", thread_id)
+        return JSONResponse(
+            content={
+                "error": "Your message was blocked by our safety system. "
+                "It appears to contain a prompt injection attempt.",
+                "safety": shield_result,
+            },
+            status_code=400,
+        )
 
     # Get conversation history from database (Cosmos or in-memory)
     existing = get_conversation(thread_id)
@@ -237,6 +258,26 @@ async def chat(request: Request) -> StreamingResponse:
                     messages=history,
                 )
 
+            # ---- Content Safety: analyze generated output ----
+            safety_result = (
+                await analyze_safety(assistant_content)
+                if assistant_content
+                else {"safe": True, "skipped": True, "reason": "No content generated"}
+            )
+            safety_event = {
+                "type": "safety",
+                "safety": safety_result,
+                "summary": format_safety_summary(safety_result),
+            }
+            yield json.dumps(safety_event, ensure_ascii=False) + "\n\n"
+
+            if not safety_result.get("safe", True):
+                logger.warning(
+                    "Content Safety flagged output (thread=%s): %s",
+                    thread_id,
+                    format_safety_summary(safety_result),
+                )
+
             # Send done signal
             done_event = {"type": "done", "thread_id": thread_id}
             yield json.dumps(done_event) + "\n\n"
@@ -269,6 +310,47 @@ if _SERVE_STATIC and _STATIC_DIR.is_dir():
         return FileResponse(_STATIC_DIR / "index.html")
 
     logger.info("Serving frontend static files from %s", _STATIC_DIR)
+
+
+# ---------- Content Safety Endpoint ---------- #
+
+
+@app.post("/api/safety")
+async def safety_check_endpoint(request: Request):
+    """Analyze text for harmful content using Azure AI Content Safety.
+
+    Accepts JSON: {text, check_prompt_injection?}
+    Returns: {safe, categories, blocked_categories?, summary}
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+
+    text = body.get("text", "")
+    check_injection = body.get("check_prompt_injection", False)
+
+    if not text:
+        return JSONResponse({"error": "text is required"}, status_code=400)
+
+    if not safety_configured():
+        return JSONResponse(
+            {
+                "error": "Content Safety not configured",
+                "hint": "Set CONTENT_SAFETY_ENDPOINT environment variable",
+            },
+            status_code=501,
+        )
+
+    result = await analyze_safety(text)
+
+    # Optional prompt injection check
+    if check_injection:
+        shield = await check_prompt_shield(text)
+        result["prompt_shield"] = shield
+
+    result["summary"] = format_safety_summary(result)
+    return result
 
 
 # ---------- Foundry Evaluation Endpoint ---------- #

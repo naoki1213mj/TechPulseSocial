@@ -19,15 +19,26 @@ export interface ToolEvent {
   message?: string;
 }
 
+export interface SafetyResult {
+  safe: boolean;
+  skipped?: boolean;
+  reason?: string;
+  categories?: Record<string, number>;
+  blocked_categories?: string[];
+  summary?: string;
+}
+
 export interface ChatChunk {
   choices?: Array<{
     messages: Array<{ role: string; content: string }>;
   }>;
   thread_id?: string;
-  type?: "done" | "error" | "reasoning_update";
+  type?: "done" | "error" | "reasoning_update" | "safety";
   reasoning?: string;
   error?: string;
   message?: string;
+  safety?: SafetyResult;
+  summary?: string;
 }
 
 // SSE marker patterns (matching backend)
@@ -43,6 +54,7 @@ export interface ParsedChunk {
   done: boolean;
   threadId: string | null;
   error: string | null;
+  safety: SafetyResult | null;
 }
 
 /**
@@ -70,27 +82,31 @@ export function parseChunk(raw: string): ParsedChunk {
   // Try to parse remaining as JSON
   cleaned = cleaned.trim();
   if (!cleaned) {
-    return { text: "", toolEvents, reasoning, done: false, threadId: null, error: null };
+    return { text: "", toolEvents, reasoning, done: false, threadId: null, error: null, safety: null };
   }
 
   try {
     const obj: ChatChunk = JSON.parse(cleaned);
     if (obj.type === "done") {
-      return { text: "", toolEvents, reasoning, done: true, threadId: obj.thread_id ?? null, error: null };
+      return { text: "", toolEvents, reasoning, done: true, threadId: obj.thread_id ?? null, error: null, safety: null };
+    }
+    // Safety result from Content Safety analysis
+    if (obj.type === "safety" && obj.safety) {
+      return { text: "", toolEvents, reasoning, done: false, threadId: null, error: null, safety: obj.safety as SafetyResult };
     }
     // Reasoning delivered as JSON envelope (avoids \n\n SSE framing issues)
     if (obj.type === "reasoning_update" && obj.reasoning) {
-      return { text: "", toolEvents, reasoning: obj.reasoning, done: false, threadId: null, error: null };
+      return { text: "", toolEvents, reasoning: obj.reasoning, done: false, threadId: null, error: null, safety: null };
     }
     if (obj.error) {
-      return { text: "", toolEvents, reasoning, done: false, threadId: null, error: obj.error };
+      return { text: "", toolEvents, reasoning, done: false, threadId: null, error: obj.error, safety: null };
     }
     const content = obj.choices?.[0]?.messages?.[0]?.content ?? "";
     const threadId = obj.thread_id ?? null;
-    return { text: content, toolEvents, reasoning, done: false, threadId, error: null };
+    return { text: content, toolEvents, reasoning, done: false, threadId, error: null, safety: null };
   } catch {
     // Not JSON — treat as plain text
-    return { text: cleaned, toolEvents, reasoning, done: false, threadId: null, error: null };
+    return { text: cleaned, toolEvents, reasoning, done: false, threadId: null, error: null, safety: null };
   }
 }
 

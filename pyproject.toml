@@ -10,6 +10,7 @@ dependencies = [
     "azure-cosmos",
     "azure-monitor-opentelemetry",
     "azure-core-tracing-opentelemetry",
+    "azure-ai-contentsafety",
     "azure-ai-evaluation",
     "opentelemetry-sdk",
     "httpx",

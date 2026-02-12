@@ -56,6 +56,9 @@ OTEL_SERVICE_NAME: str = os.getenv("OTEL_SERVICE_NAME", "techpulse-social")
 # Evaluation
 EVAL_MODEL_DEPLOYMENT: str = os.getenv("EVAL_MODEL_DEPLOYMENT", "gpt-4o-mini")
 
+# Content Safety
+CONTENT_SAFETY_ENDPOINT: str = os.getenv("CONTENT_SAFETY_ENDPOINT", "")
+
 # Feature flags
 DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 SERVE_STATIC: bool = os.getenv("SERVE_STATIC", "false").lower() == "true"
