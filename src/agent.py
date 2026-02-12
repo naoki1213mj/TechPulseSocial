@@ -329,7 +329,7 @@ async def run_agent_stream(
                 break  # Success — proceed to streaming
             except Exception as run_exc:
                 if _is_retryable_error(run_exc) and attempt < MAX_RETRIES:
-                    delay = RETRY_BASE_DELAY_S * (2 ** attempt)
+                    delay = RETRY_BASE_DELAY_S * (2**attempt)
                     logger.warning(
                         "Retryable error on agent.run() attempt %d/%d: %s "
                         "(retrying in %.1fs)",
@@ -339,7 +339,8 @@ async def run_agent_stream(
                         delay,
                     )
                     yield create_tool_event(
-                        "retry", "started",
+                        "retry",
+                        "started",
                         f"Retrying... (attempt {attempt + 2})",
                     )
                     await asyncio.sleep(delay)

@@ -311,7 +311,11 @@ async def chat(request: Request) -> StreamingResponse:
             logger.error("Stream error: %s", e, exc_info=True)
             # Send user-friendly error instead of raw exception
             err_msg = str(e).lower()
-            if "failed to complete the prompt" in err_msg or "429" in err_msg or "500" in err_msg:
+            if (
+                "failed to complete the prompt" in err_msg
+                or "429" in err_msg
+                or "500" in err_msg
+            ):
                 user_message = (
                     "Azure AI サービスが一時的に利用できません。しばらくしてから再度お試しください。"
                     " / The Azure AI service is temporarily unavailable. Please try again shortly."

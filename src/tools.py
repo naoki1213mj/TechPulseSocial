@@ -4,26 +4,36 @@ Tools are defined with the @tool decorator from agent_framework.
 The LLM decides when and how to call these tools based on context.
 """
 
+import asyncio
 import json
 import logging
 from contextvars import ContextVar
 from typing import Annotated
 
 from agent_framework import tool
-from azure.identity import DefaultAzureCredential
-from openai import AzureOpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from openai import OpenAI
 
-from src.config import AZURE_AI_SCOPE, IMAGE_DEPLOYMENT_NAME, PROJECT_ENDPOINT
+from src.config import (
+    AZURE_AI_SCOPE,
+    IMAGE_DEPLOYMENT_NAME,
+    MODEL_DEPLOYMENT_NAME,
+    RESPONSES_API_BASE_URL,
+)
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Per-request image storage (side-channel via ContextVar)
+# Per-request image storage (side-channel via ContextVar + module-level fallback)
 # ---------------------------------------------------------------------------
 # Images are stored here by the generate_image tool and retrieved by agent.py
 # after streaming completes. This avoids sending heavy base64 data through
 # the LLM (which wastes tokens and may be truncated by the SDK).
 _pending_images: ContextVar[dict[str, str]] = ContextVar("pending_images", default=None)
+
+# Module-level fallback store (used if ContextVar doesn't propagate across
+# the agent framework's tool execution context)
+_fallback_images: dict[str, str] = {}
 
 
 def init_image_store() -> None:
@@ -32,18 +42,33 @@ def init_image_store() -> None:
     Must be called at the start of each agent run so that the
     generate_image tool can store images for later retrieval.
     """
+    global _fallback_images
     _pending_images.set({})
+    _fallback_images = {}
 
 
 def pop_pending_images() -> dict[str, str]:
     """Pop and return all pending images from the current request.
 
+    Checks both ContextVar and module-level fallback store.
+
     Returns:
         Dict mapping platform name to base64 image data.
     """
-    store = _pending_images.get(None) or {}
+    global _fallback_images
+    cv_store = _pending_images.get(None) or {}
     _pending_images.set({})
-    return store
+    # Merge: fallback takes precedence (it's always written to)
+    merged = {**cv_store, **_fallback_images}
+    _fallback_images = {}
+    if merged:
+        logger.info(
+            "pop_pending_images: %d image(s) retrieved (cv=%d, fallback=%d)",
+            len(merged),
+            len(cv_store),
+            len(_fallback_images) + len(merged),  # was before clear
+        )
+    return merged
 
 
 # Platform character limits and formatting rules
@@ -180,38 +205,51 @@ async def review_content(
 
 
 # ---------------------------------------------------------------------------
-# Image generation tool (gpt-image-1.5)
+# Image generation tool (gpt-image-1.5 via Responses API)
 # ---------------------------------------------------------------------------
+# The Foundry project endpoint does NOT support the legacy images.generate()
+# endpoint. Instead, we use the Responses API with the built-in
+# image_generation tool type, specifying the deployment via a custom header.
 
-# Reusable image client (lazy init with token refresh)
-_image_client: AzureOpenAI | None = None
-_image_token_expires_on: float = 0.0
+# Reusable OpenAI client (lazy init with auto-refresh token provider)
+_image_client: OpenAI | None = None
+
+# Azure AD token provider — handles caching and automatic refresh
+_image_credential = DefaultAzureCredential()
+_image_token_provider = get_bearer_token_provider(_image_credential, AZURE_AI_SCOPE)
 
 
-def _get_image_client() -> AzureOpenAI:
-    """Get or create a singleton AzureOpenAI client for image generation.
+def _get_image_client() -> OpenAI:
+    """Get or create a singleton OpenAI client for image generation.
 
-    Refreshes the token when it expires (tokens are typically valid for ~1 hour).
+    Uses the Responses API base URL with:
+    - Bearer token auth via get_bearer_token_provider
+    - x-ms-oai-image-generation-deployment header for model routing
+    - api-version query parameter required by Foundry endpoint
     """
-    global _image_client, _image_token_expires_on
-    import time
+    global _image_client
 
-    now = time.time()
-    if _image_client is not None and now < _image_token_expires_on - 60:
+    if _image_client is not None:
         return _image_client
 
-    credential = DefaultAzureCredential()
-    token = credential.get_token(AZURE_AI_SCOPE)
-    _image_token_expires_on = token.expires_on
-    _image_client = AzureOpenAI(
-        azure_endpoint=PROJECT_ENDPOINT,
-        api_key=token.token,
-        api_version="2025-04-01-preview",
+    _image_client = OpenAI(
+        base_url=RESPONSES_API_BASE_URL,
+        api_key=_image_token_provider,
+        default_headers={
+            "x-ms-oai-image-generation-deployment": IMAGE_DEPLOYMENT_NAME,
+        },
+        default_query={"api-version": "2025-05-15-preview"},
+    )
+    logger.info(
+        "Image client created (Responses API): base_url=%s, deployment=%s",
+        RESPONSES_API_BASE_URL,
+        IMAGE_DEPLOYMENT_NAME,
     )
     return _image_client
 
 
-# Platform-specific image sizes
+# Platform-specific image sizes (not used in Responses API approach,
+# but kept for prompt context)
 IMAGE_SIZES: dict[str, str] = {
     "linkedin": "1024x1024",
     "x": "1024x1024",
@@ -229,8 +267,9 @@ async def generate_image(
 ) -> str:
     """Generate a social media visual using GPT Image (gpt-image-1.5).
 
-    Creates a platform-optimized image from a text prompt.
-    Returns a JSON object with base64 image data and metadata.
+    Creates a platform-optimized image from a text prompt using the
+    Responses API with the built-in image_generation tool.
+    Returns a JSON object with metadata (image data stored via side-channel).
     """
     platform_key = platform.lower().strip()
     size = IMAGE_SIZES.get(platform_key, "1024x1024")
@@ -239,7 +278,7 @@ async def generate_image(
     enhanced_prompt = (
         f"{prompt}. "
         f"Style: {style}. "
-        f"Optimized for {platform_key} social media. "
+        f"Optimized for {platform_key} social media ({size}). "
         f"Professional, modern, high quality."
     )
 
@@ -252,39 +291,72 @@ async def generate_image(
 
     try:
         client = _get_image_client()
-        response = client.images.generate(
-            model=IMAGE_DEPLOYMENT_NAME,
-            prompt=enhanced_prompt,
-            size=size,
-            n=1,
-            response_format="b64_json",
-        )
 
-        image_b64 = response.data[0].b64_json
-        revised_prompt = getattr(response.data[0], "revised_prompt", prompt)
+        # Use Responses API with image_generation tool (runs in thread
+        # since the OpenAI SDK's sync client blocks the event loop)
+        def _sync_generate():
+            return client.responses.create(
+                model=MODEL_DEPLOYMENT_NAME,
+                input=enhanced_prompt,
+                tools=[{"type": "image_generation"}],
+            )
+
+        response = await asyncio.to_thread(_sync_generate)
+
+        # Extract image data from response output
+        image_items = [
+            item
+            for item in (response.output or [])
+            if item.type == "image_generation_call"
+        ]
+
+        if not image_items or not getattr(image_items[0], "result", None):
+            out_types = [i.type for i in (response.output or [])]
+            logger.warning(
+                "No image data in response. Output types: %s",
+                out_types,
+            )
+            return json.dumps(
+                {
+                    "platform": platform_key,
+                    "error": "Image generation returned no image data.",
+                    "status": "failed",
+                },
+                ensure_ascii=False,
+            )
+
+        image_b64 = image_items[0].result
 
         # Store image in per-request side-channel (NOT returned to LLM)
         # This avoids sending ~1-2MB of base64 through the model context
+        # Write to both ContextVar and module-level fallback for reliability
         store = _pending_images.get(None)
         if store is not None:
             store[platform_key] = image_b64
             logger.info(
-                "Image stored in side-channel: platform=%s, b64_length=%d",
+                "Image stored in ContextVar: platform=%s, b64_length=%d",
                 platform_key,
                 len(image_b64) if image_b64 else 0,
             )
         else:
             logger.warning(
-                "Image store not initialized — image will not be displayed. "
-                "Ensure init_image_store() is called before agent.run()."
+                "ContextVar image store not available (tool may be running "
+                "in a different context). Using fallback store."
             )
+
+        # Always write to module-level fallback for reliability
+        _fallback_images[platform_key] = image_b64
+        logger.info(
+            "Image stored in fallback: platform=%s, b64_length=%d",
+            platform_key,
+            len(image_b64) if image_b64 else 0,
+        )
 
         # Return only metadata to the LLM (no heavy base64 data)
         result = {
             "platform": platform_key,
             "size": size,
             "style": style,
-            "revised_prompt": revised_prompt,
             "status": "generated",
             "message": (
                 f"Image successfully generated for {platform_key} ({size}). "
@@ -301,10 +373,17 @@ async def generate_image(
         return json.dumps(result, ensure_ascii=False)
 
     except Exception as e:
-        logger.error("Image generation failed: %s", e, exc_info=True)
+        logger.error(
+            "Image generation failed: %s (type=%s, platform=%s, model=%s)",
+            e,
+            type(e).__name__,
+            platform_key,
+            IMAGE_DEPLOYMENT_NAME,
+            exc_info=True,
+        )
         error_result = {
             "platform": platform_key,
-            "error": "Image generation failed. Please try again.",
+            "error": f"Image generation failed: {type(e).__name__}: {e}",
             "status": "failed",
         }
         return json.dumps(error_result, ensure_ascii=False)
