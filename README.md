@@ -86,6 +86,52 @@ graph LR
     API -. "Traces" .-> Ops
 ```
 
+### ☁️ Azure Infrastructure
+
+```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 20, 'rankSpacing': 50, 'curve': 'basis'}}}%%
+graph LR
+    subgraph GitHub["GitHub"]
+        Repo["📦 Repository"]
+        Actions["⚙️ GitHub Actions<br/>CI / Deploy / Security"]
+    end
+
+    subgraph Azure["Azure — East US 2"]
+        subgraph Compute["Compute"]
+            CA["🐳 Container App<br/>ca-techpulse-prod<br/>FastAPI + React SPA"]
+            ACR["📦 ACR<br/>crtechpulseprod"]
+        end
+
+        subgraph AI["AI Services"]
+            Foundry["🧠 AI Foundry<br/>+ Project"]
+            GPT52["gpt-5.2"]
+            GPTImg["gpt-image-1.5"]
+            Bing["🔍 Bing Grounding"]
+            Safety["🛡️ Content Safety"]
+        end
+
+        subgraph Data["Data & Observability"]
+            Cosmos["💾 Cosmos DB"]
+            VS["📁 Vector Store"]
+            AppInsights["📊 Application Insights"]
+        end
+    end
+
+    MCP["📘 MCP Server<br/>learn.microsoft.com"]
+
+    Repo -->|push| Actions
+    Actions -->|az acr build| ACR
+    Actions -->|az containerapp update| CA
+    ACR -->|pull| CA
+    CA -->|Responses API| Foundry
+    Foundry --> GPT52 & GPTImg
+    CA --> Bing & VS & Safety & Cosmos
+    CA --> MCP
+    CA -.->|OTel| AppInsights
+```
+
+> 📄 Full resource inventory → [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
 ## 🧠 Reasoning Pipeline (3-Phase)
 
 All three reasoning patterns are integrated into a **single system prompt** — the agent autonomously progresses through each phase. The UI displays **live phase badges** that highlight the active stage:

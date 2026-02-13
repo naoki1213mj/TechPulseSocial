@@ -54,6 +54,7 @@ function mergeImages<T extends StructuredOutput | ABStructuredOutput>(
   imageMap: Record<string, string>,
 ): T {
   if (!imageMap || Object.keys(imageMap).length === 0) return data;
+  console.log(`[mergeImages] imageMap keys: ${Object.keys(imageMap).join(", ")}, data type: ${"mode" in data ? "ab" : "normal"}`);
 
   if ("mode" in data && data.mode === "ab") {
     const ab = data as ABStructuredOutput;

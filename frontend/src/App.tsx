@@ -141,6 +141,7 @@ export default function App() {
 
           // Image data — collect per-platform images
           if (chunk.imageData) {
+            console.log(`[App] Image data received: platform=${chunk.imageData.platform}, base64_length=${chunk.imageData.image_base64.length}`);
             setImageMap((prev) => ({
               ...prev,
               [chunk.imageData!.platform]: chunk.imageData!.image_base64,

@@ -100,6 +100,7 @@ export function parseChunk(raw: string): ParsedChunk {
     }
     // Image data from generate_image tool
     if (obj.type === "image" && obj.platform && obj.image_base64) {
+      console.log(`[SSE] Image received: platform=${obj.platform}, base64_length=${obj.image_base64.length}`);
       return { text: "", toolEvents, reasoning, done: false, threadId: null, error: null, safety: null, imageData: { platform: obj.platform, image_base64: obj.image_base64 } };
     }
     // Safety result from Content Safety analysis

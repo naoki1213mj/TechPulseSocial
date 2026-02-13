@@ -86,6 +86,52 @@ graph LR
     API -. "トレース" .-> Ops
 ```
 
+### ☁️ Azure インフラストラクチャ
+
+```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 20, 'rankSpacing': 50, 'curve': 'basis'}}}%%
+graph LR
+    subgraph GitHub["GitHub"]
+        Repo["📦 リポジトリ"]
+        Actions["⚙️ GitHub Actions<br/>CI / Deploy / Security"]
+    end
+
+    subgraph Azure["Azure — East US 2"]
+        subgraph Compute["コンピュート"]
+            CA["🐳 Container App<br/>ca-techpulse-prod<br/>FastAPI + React SPA"]
+            ACR["📦 ACR<br/>crtechpulseprod"]
+        end
+
+        subgraph AI["AI サービス"]
+            Foundry["🧠 AI Foundry<br/>+ Project"]
+            GPT52["gpt-5.2"]
+            GPTImg["gpt-image-1.5"]
+            Bing["🔍 Bing Grounding"]
+            Safety["🛡️ Content Safety"]
+        end
+
+        subgraph Data["データ & 可観測性"]
+            Cosmos["💾 Cosmos DB"]
+            VS["📁 Vector Store"]
+            AppInsights["📊 Application Insights"]
+        end
+    end
+
+    MCP["📘 MCP Server<br/>learn.microsoft.com"]
+
+    Repo -->|push| Actions
+    Actions -->|az acr build| ACR
+    Actions -->|az containerapp update| CA
+    ACR -->|pull| CA
+    CA -->|Responses API| Foundry
+    Foundry --> GPT52 & GPTImg
+    CA --> Bing & VS & Safety & Cosmos
+    CA --> MCP
+    CA -.->|OTel| AppInsights
+```
+
+> 📄 リソース一覧の詳細 → [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
 ## 🧠 推論パイプライン（3 フェーズ）
 
 3 つの推論パターンがすべて**単一のシステムプロンプト**に統合されており、エージェントが各フェーズを自律的に進行します。UI には**ライブフェーズバッジ**がアクティブなステージを表示します：
