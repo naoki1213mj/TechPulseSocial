@@ -32,21 +32,18 @@ def _get_container():
         return None
 
     try:
-        from azure.cosmos import CosmosClient, PartitionKey
+        from azure.cosmos import CosmosClient
         from azure.identity import DefaultAzureCredential
 
         credential = DefaultAzureCredential()
         _cosmos_client = CosmosClient(COSMOS_ENDPOINT, credential=credential)
 
-        # Create database if not exists
-        database = _cosmos_client.create_database_if_not_exists(id=COSMOS_DATABASE)
-
-        # Create container with /userId partition key
-        # Note: offer_throughput is omitted for serverless Cosmos DB accounts
-        _container = database.create_container_if_not_exists(
-            id=COSMOS_CONTAINER,
-            partition_key=PartitionKey(path="/userId"),
-        )
+        # Use existing database and container (provisioned via IaC / Azure CLI).
+        # get_*_client() creates a local reference without a network call,
+        # so it works with the Data Contributor data-plane role — unlike
+        # create_*_if_not_exists() which requires control-plane write perms.
+        database = _cosmos_client.get_database_client(COSMOS_DATABASE)
+        _container = database.get_container_client(COSMOS_CONTAINER)
 
         logger.info(
             "Cosmos DB connected: %s, db=%s, container=%s",
