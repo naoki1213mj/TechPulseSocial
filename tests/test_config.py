@@ -45,7 +45,7 @@ class TestConfigDefaults:
     def test_ai_search_reasoning_effort_default(self):
         from src.config import AI_SEARCH_REASONING_EFFORT
 
-        assert AI_SEARCH_REASONING_EFFORT == os.getenv("AI_SEARCH_REASONING_EFFORT", "low")
+        assert AI_SEARCH_REASONING_EFFORT == os.getenv("AI_SEARCH_REASONING_EFFORT", "minimal")
 
 
 class TestConfigDerived:
