@@ -40,8 +40,8 @@ Single reasoning agent (gpt-5.2) × 7 tools × 3-phase thinking pipeline × prod
 | 🖼️ **Image Generation** | gpt-image-1.5 creates platform-optimized visuals (LinkedIn 1.91:1, Instagram 1:1) |
 | 💾 **Persistence** | Cosmos DB conversation history with in-memory fallback |
 | 🌐 **5-Language i18n** | EN / JA / KO / ZH / ES with flag-based selector |
-| 🌏 **Bilingual Mode** | EN + JA simultaneous content generation with language badges |
-| 📝 **15 Content Types** | Product launch, thought leadership, case study, tutorial, custom freeform, and more |
+| 🌏 **Bilingual Mode** | EN + JA simultaneous generation — Parallel (separate posts) or Combined (EN+JA in one post) |
+| 📝 **16 Content Types** | Product launch, thought leadership, event recap, case study, tutorial, custom freeform, and more |
 | 🌙 **Dark / Light Mode** | System-preference-aware theme switching |
 | ✨ **Glassmorphism UI** | Frosted glass, gradient borders, animated tool pills |
 | 🚀 **One-Command Deploy** | `azd up` → Azure Container Apps |
@@ -372,7 +372,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full Azure architecture
 │   ├── src/
 │   │   ├── App.tsx               # Main application w/ HITL + retry + elapsed timer
 │   │   ├── components/
-│   │   │   ├── InputForm.tsx     # Topic input + AI Settings (15 content types + custom)
+│   │   │   ├── InputForm.tsx     # Topic input + AI Settings (16 content types + custom)
 │   │   │   ├── ContentCards.tsx  # Platform cards + HITL + Export + Foundry Eval
 │   │   │   ├── ContentDisplay.tsx # JSON → Cards parser + Skeleton
 │   │   │   ├── PhasesStepper.tsx  # 3-phase pipeline progress indicator
@@ -415,7 +415,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full Azure architecture
   "reasoning_effort": "high",
   "reasoning_summary": "detailed",
   "ab_mode": false,
-  "bilingual": false
+  "bilingual": false,
+  "bilingual_style": "parallel"
 }
 ```
 
@@ -491,8 +492,8 @@ Returns: `{"safe": true, "categories": {...}, "prompt_shield": {...}, "summary":
 - **Skeleton Loading** — Shimmer placeholders during generation
 - **Card Animations** — Staggered fade-in on content card appearance
 - **Platform-Specific Images** — LinkedIn/X landscape (1.91:1), Instagram square (1:1) with dimension labels
-- **15 Content Types** — Including custom freeform input for any posting pattern
-- **Bilingual Mode** — EN + JA toggle with language badges on content cards
+- **16 Content Types** — Including event recap, custom freeform input, and more
+- **Bilingual Mode** — EN + JA with Parallel (separate posts) / Combined (EN+JA in one post) style selector
 - **Foundry Evaluation Button** — One-click "Evaluate with Foundry" with 4-axis score display
 - **Dark / Light Mode** — System-preference-aware
 - **5-Language i18n** — EN / JA / KO / ZH / ES with flag selector
@@ -504,7 +505,7 @@ Returns: `{"safe": true, "categories": {...}, "prompt_shield": {...}, "summary":
 | **Accuracy & Relevance** | 25% | 7 tools (web search, file search, MCP, Foundry IQ, content gen, review, image gen), brand grounding via Vector Store, Foundry Evaluation (Relevance + Groundedness scoring), dual quality assessment |
 | **Reasoning & Multi-step Thinking** | 25% | 3-phase pipeline (CoT → ReAct → Self-Reflection), live phase badges, controllable depth (low/medium/high), OpenTelemetry tracing of reasoning pipeline with per-tool spans |
 | **Creativity & Originality** | 20% | HITL workflow (approve/edit/refine), A/B content comparison with strategy variants, reasoning phase visualization, GPT Image generation, MCP Server integration, dual evaluation system (self-review + Foundry metrics) |
-| **User Experience & Presentation** | 15% | Polished glassmorphism UI with animations, dark/light mode, 5-language i18n, skeleton loading, suggested questions, keyboard shortcuts, conversation history, content export (Markdown + JSON) |
+| **User Experience & Presentation** | 15% | Polished glassmorphism UI with animations, dark/light mode, 5-language i18n, bilingual mode (parallel + combined), skeleton loading, suggested questions, keyboard shortcuts, conversation history, content export (Markdown + JSON) |
 | **Technical Implementation** | 15% | agent-framework-core SDK, SSE streaming with OTel distributed tracing, Cosmos DB persistence, Azure Container Apps deployment via azd, GitHub Actions CI/CD (lint → test → build → deploy → security scan), 123 unit tests, OpenTelemetry → Application Insights pipeline, Foundry Evaluation SDK integration |
 
 ## 🧪 Testing

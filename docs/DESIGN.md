@@ -161,11 +161,13 @@ AI Settings パネルの A/B モードをトグルすると、**2つのコンテ
   "thread_id": "string | null (マルチターン用、初回は null)",
   "conversation_id": "string | null (Cosmos DB 会話 ID)",
   "platforms": ["linkedin", "x", "instagram"],
-  "content_type": "product_launch | blog_summary | event | hiring | trend | thought_leadership | tech_insight",
+  "content_type": "product_launch | thought_leadership | event_promotion | event_recap | company_culture | tech_insight | news_commentary | tutorial_howto | case_study | behind_the_scenes | announcement | data_insight | personal_branding | recruitment | seasonal | custom",
   "language": "en | ja | ko | zh | es",
   "reasoning_effort": "low | medium | high",
   "reasoning_summary": "off | auto | concise | detailed",
-  "ab_mode": false
+  "ab_mode": false,
+  "bilingual": false,
+  "bilingual_style": "parallel | combined"
 }
 ```
 

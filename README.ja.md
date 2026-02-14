@@ -38,8 +38,8 @@
 | 🖼️ **画像生成** | gpt-image-1.5 によるプラットフォーム最適化ビジュアル（LinkedIn 1.91:1, Instagram 1:1） |
 | 💾 **データ永続化** | Cosmos DB 会話履歴（インメモリフォールバック付き） |
 | 🌐 **5 言語 i18n** | EN / JA / KO / ZH / ES フラグセレクター |
-| 🌏 **バイリンガルモード** | EN + JA 同時コンテンツ生成（言語バッジ付き） |
-| 📝 **15 コンテンツタイプ** | 製品ローンチ、ソートリーダーシップ、ケーススタディ、チュートリアル、カスタム自由入力など |
+| 🌏 **バイリンガルモード** | EN + JA 同時生成 — 並列（個別投稿）/ 併記（EN+JAを1投稿に）切替対応 |
+| 📝 **16 コンテンツタイプ** | 製品ローンチ、ソートリーダーシップ、イベント参加レポート、ケーススタディ、チュートリアル、カスタム自由入力など |
 | 🌙 **ダーク / ライトモード** | システム設定連動テーマ切替 |
 | ✨ **グラスモーフィズム UI** | フロストガラス、グラデーション、アニメーションツールピル |
 | 🚀 **ワンコマンドデプロイ** | `azd up` → Azure Container Apps |
@@ -366,7 +366,7 @@ git push → Lint (Ruff) → Test (123 pytest) → Build (ACR) → Deploy (Conta
 │   ├── src/
 │   │   ├── App.tsx               # メインアプリ（HITL + リトライ + 経過タイマー）
 │   │   ├── components/
-│   │   │   ├── InputForm.tsx     # トピック入力 + AI 設定パネル（15 コンテンツタイプ + カスタム）
+│   │   │   ├── InputForm.tsx     # トピック入力 + AI 設定パネル（16 コンテンツタイプ + カスタム）
 │   │   │   ├── ContentCards.tsx  # プラットフォームカード + HITL + エクスポート + Foundry 評価
 │   │   │   ├── ContentDisplay.tsx # JSON → カードパーサー + スケルトン
 │   │   │   ├── PhasesStepper.tsx  # 3 フェーズパイプラインプログレスインジケーター
@@ -413,7 +413,8 @@ git push → Lint (Ruff) → Test (123 pytest) → Build (ACR) → Deploy (Conta
   "reasoning_effort": "high",
   "reasoning_summary": "detailed",
   "ab_mode": false,
-  "bilingual": false
+  "bilingual": false,
+  "bilingual_style": "parallel"
 }
 ```
 
@@ -489,8 +490,8 @@ SSE ストリームを返します：
 - **スケルトンローディング** — 生成中のシマープレースホルダー
 - **カードアニメーション** — コンテンツカード出現時のスタガードフェードイン
 - **プラットフォーム別画像** — LinkedIn/X 横長（1.91:1）、Instagram 正方形（1:1）寸法ラベル付き
-- **15 コンテンツタイプ** — カスタム自由入力含むあらゆる投稿パターンに対応
-- **バイリンガルモード** — EN + JA トグル（コンテンツカードに言語バッジ表示）
+- **16 コンテンツタイプ** — イベント参加レポート、カスタム自由入力含むあらゆる投稿パターンに対応
+- **バイリンガルモード** — EN + JA 並列（個別投稿）/ 併記（EN+JAを1投稿に）スタイル選択対応
 - **Foundry 評価ボタン** — ワンクリック「Evaluate with Foundry」（関連性・一貫性・流暢性・根拠性の 4 軸スコア）
 - **ダーク / ライトモード** — システム設定連動
 - **5 言語 i18n** — EN / JA / KO / ZH / ES（フラグセレクター）
@@ -502,7 +503,7 @@ SSE ストリームを返します：
 | **正確性 & 関連性** | 25% | 7 ツール（Web検索、ファイル検索、MCP、Foundry IQ、コンテンツ生成、レビュー、画像生成）、Vector Store によるブランドグラウンディング、Foundry Evaluation（関連性 + 根拠性スコアリング）、デュアル品質評価 |
 | **推論 & マルチステップ思考** | 25% | 3 フェーズパイプライン（CoT → ReAct → Self-Reflection）、ライブフェーズバッジ、制御可能な深さ（low/medium/high）、OpenTelemetry による推論パイプラインのトレーシング（ツール別スパン） |
 | **創造性 & 独自性** | 20% | HITL ワークフロー（承認/編集/改善）、A/B コンテンツ比較（戦略バリアント）、推論フェーズ可視化、GPT 画像生成、MCP Server 統合、デュアル評価システム（自己レビュー + Foundry メトリクス） |
-| **ユーザー体験 & プレゼン** | 15% | フロストガラス UI + アニメーション、ダーク/ライトモード、5 言語 i18n、スケルトンローディング、おすすめ質問、キーボードショートカット、会話履歴、コンテンツエクスポート（Markdown + JSON） |
+| **ユーザー体験 & プレゼン** | 15% | フロストガラス UI + アニメーション、ダーク/ライトモード、5 言語 i18n、バイリンガルモード（並列 + 併記）、スケルトンローディング、おすすめ質問、キーボードショートカット、会話履歴、コンテンツエクスポート（Markdown + JSON） |
 | **技術実装** | 15% | agent-framework-core SDK、OTel 分散トレーシング付き SSE ストリーミング、Cosmos DB 永続化、azd 経由 Azure Container Apps デプロイ、GitHub Actions CI/CD（lint → test → build → deploy → security scan）、123 ユニットテスト、OpenTelemetry → Application Insights パイプライン、Foundry Evaluation SDK 統合 |
 
 ## 🧪 テスト

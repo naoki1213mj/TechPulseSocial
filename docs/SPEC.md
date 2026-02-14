@@ -26,15 +26,24 @@ OpenTelemetry 分散トレーシング、Foundry Evaluation による品質メ�
 | **X (Twitter)** | 開発者コミュニティ、速報 | 280文字 | カジュアル、テック寄り、ウィット |
 | **Instagram** | ブランディング、社内文化 | 2,200文字 | ビジュアル重視、親しみやすい |
 
-### 2.2 コンテンツタイプ
+### 2.2 コンテンツタイプ（16種類）
 
 - 製品ローンチ告知 (`product_launch`)
-- 技術ブログ記事の要約投稿 (`blog_summary`)
-- イベント告知・レポート (`event`)
-- 採用情報 (`hiring`)
-- 業界トレンド解説 (`trend`)
-- 思考リーダーシップ投稿 (`thought_leadership`)
+- ソートリーダーシップ投稿 (`thought_leadership`)
+- イベント告知 (`event_promotion`)
+- イベント参加レポート (`event_recap`)
+- 企業カルチャー (`company_culture`)
 - テックインサイト (`tech_insight`)
+- ニュース解説 (`news_commentary`)
+- チュートリアル / How-to (`tutorial_howto`)
+- 事例紹介 (`case_study`)
+- 舞台裏 / 裏側 (`behind_the_scenes`)
+- お知らせ (`announcement`)
+- データ / インフォグラフィック (`data_insight`)
+- パーソナルブランディング (`personal_branding`)
+- 採用 / 求人 (`recruitment`)
+- 季節・イベント (`seasonal`)
+- カスタム自由入力 (`custom`)
 
 ### 2.3 入力パラメータ
 
@@ -47,6 +56,8 @@ OpenTelemetry 分散トレーシング、Foundry Evaluation による品質メ�
 | `reasoning_effort` | ❌ | 推論の深さ（low/medium/high、デフォルト: high）|
 | `reasoning_summary` | ❌ | thinking 表示（off/auto/concise/detailed）|
 | `ab_mode` | ❌ | A/B 比較モード（デフォルト: false）|
+| `bilingual` | ❌ | バイリンガルモード（EN+JA同時生成、デフォルト: false）|
+| `bilingual_style` | ❌ | バイリンガルスタイル: parallel（個別投稿）/ combined（EN+JA併記）|
 | `thread_id` | ❌ | マルチターン用スレッド ID（初回は null）|
 | `conversation_id` | ❌ | Cosmos DB 会話 ID |
 
@@ -138,8 +149,7 @@ OpenTelemetry 分散トレーシング、Foundry Evaluation による品質メ�
 | 💀 **Skeleton Loading** | shimmer プレースホルダー (生成中) |
 | 🎬 **Card Animations** | staggered fade-in (順次表示) |
 | 🌙 **Dark / Light Mode** | system-preference-aware |
-| 🌐 **5言語 i18n** | EN / JA / KO / ZH / ES (国旗セレクター) |
-
+| 🌐 **5言語 i18n** | EN / JA / KO / ZH / ES (国旗セレクター) || 🌏 **バイリンガル** | EN + JA 並列（個別投稿）/ 併記（EN+JAを1投稿に）スタイル選択 |
 ## 6. 技術スタック
 
 | レイヤー | 技術 |
