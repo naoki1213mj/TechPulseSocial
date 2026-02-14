@@ -50,22 +50,30 @@ async def evaluate_content(
         from azure.ai.evaluation import CoherenceEvaluator, FluencyEvaluator, RelevanceEvaluator
 
         # Model config for AI-assisted evaluators
-        # Uses the same project endpoint as the agent
+        # IMPORTANT: The evaluation SDK uses AzureOpenAI's chat completions API,
+        # which requires the *resource-level* endpoint (no /api/projects/... path)
+        # and a stable API version (2024-10-21). The project-level endpoint returns 404.
+        project_endpoint = os.getenv("PROJECT_ENDPOINT", "")
+        # Extract resource-level base: https://<host>.services.ai.azure.com
+        from urllib.parse import urlparse
+
+        parsed = urlparse(project_endpoint)
+        eval_endpoint = f"{parsed.scheme}://{parsed.netloc}" if parsed.netloc else project_endpoint
+
         model_config = {
-            "azure_endpoint": os.getenv("PROJECT_ENDPOINT", ""),
+            "azure_endpoint": eval_endpoint,
             "azure_deployment": os.getenv("EVAL_MODEL_DEPLOYMENT", "gpt-4o-mini"),
-            "api_version": "2025-05-15-preview",
+            "api_version": "2024-10-21",
         }
 
-        # Use DefaultAzureCredential with azure_ad_token_provider
-        # NOTE: api_key sends via 'api-key' header, but AAD tokens must go via
-        # 'Authorization: Bearer' header → use azure_ad_token_provider instead.
+        # Authenticate with DefaultAzureCredential via api_key (AAD token).
+        # The cognitiveservices scope works on the resource-level endpoint.
         try:
-            from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+            from azure.identity import DefaultAzureCredential
 
             credential = DefaultAzureCredential()
-            token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
-            model_config["azure_ad_token_provider"] = token_provider
+            token = credential.get_token("https://cognitiveservices.azure.com/.default")
+            model_config["api_key"] = token.token
         except Exception as e:
             logger.warning("Failed to get credential for evaluation: %s", e)
             return {"error": f"Authentication failed: {e}"}
